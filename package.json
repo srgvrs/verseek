@@ -1,0 +1,9 @@
+{
+  "name": "verseek",
+  "private": true,
+  "scripts": {
+    "test": "pnpm -r test",
+    "dev": "pnpm --filter web dev"
+  },
+  "packageManager": "pnpm@9.0.0"
+}
