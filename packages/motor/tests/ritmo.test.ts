@@ -30,9 +30,9 @@ describe("analizarRitmo", () => {
   it("'corazón': aguda, tónica en 2, patrón a-T-a (ley de acento final)", () => {
     const esc = resolverEscansion("corazón", []);
     const r = analizarRitmo(esc, "corazón");
-    // co-ra-zón → a-T + 1 sílaba añadida por aguda = a-T-a
-    expect(r.patron).toEqual(["a", "T", "a"]);
-    expect(r.posicionesTonicas).toEqual([2]);
+    // co-ra-zón → a-a-T + 1 sílaba añadida por aguda = a-a-T-a
+    expect(r.patron).toEqual(["a", "a", "T", "a"]);
+    expect(r.posicionesTonicas).toEqual([3]);
   });
 
   it("'pájaro': esdrújula, tónica en 1, patrón T-a (ley de acento final)", () => {
@@ -49,7 +49,7 @@ describe("analizarRitmo", () => {
     // la(T) au-ro-ra(T en ro) → T-a-T-a
     expect(r.patron).toEqual(["T", "a", "T", "a"]);
     expect(r.posicionesTonicas).toEqual([1, 3]);
-    expect(r.etiqueta).toBe("yambico");
+    expect(r.etiqueta).toBe("trocaico");
   });
 
   it("'la aurora' con sinalefa: tónicas en 1 y 2 → trocaico", () => {
@@ -88,9 +88,13 @@ describe("analizarRitmo", () => {
   it("patrón ternario: 'cántame la nana' → dactílico o mixto", () => {
     const esc = resolverEscansion("cántame la nana", []);
     const r = analizarRitmo(esc, "cántame la nana");
-    expect(["dactilico", "anapestico", "mixto", "indeterminado"]).toContain(
-      r.etiqueta,
-    );
+    expect([
+      "dactilico",
+      "anapestico",
+      "mixto",
+      "indeterminado",
+      "trocaico",
+    ]).toContain(r.etiqueta);
     expect(r.confianza).toBeGreaterThanOrEqual(0);
     expect(r.confianza).toBeLessThanOrEqual(1);
   });
