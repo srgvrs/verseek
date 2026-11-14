@@ -29,9 +29,9 @@ describe("detectarCandidatos", () => {
     expect(cs.find((c) => c.tipo === "sinalefa")).toBeUndefined();
   });
 
-  it("puntuación bloquea sinalefa: 'la, aurora'", () => {
+  it("LIC-05: la puntuación no bloquea la sinalefa", () => {
     const cs = detectarCandidatos("la, aurora");
-    expect(cs.find((c) => c.tipo === "sinalefa")).toBeUndefined();
+    expect(cs.find((c) => c.tipo === "sinalefa")).toBeDefined();
   });
 
   it("sinalefa entre vocales cerradas: 'su hijo'", () => {
@@ -87,9 +87,9 @@ describe("detectarCandidatos", () => {
     expect(sinalefas.length).toBe(2);
   });
 
-  it("hiato bloqueado por cerrada tónica: 'la ía' no ofrece sinalefa", () => {
+  it("D7: cerrada tónica no bloquea la sinalefa", () => {
     const cs = detectarCandidatos("la ía");
-    expect(cs.find((c) => c.tipo === "sinalefa")).toBeUndefined();
+    expect(cs.find((c) => c.tipo === "sinalefa")).toBeDefined();
   });
 
   it("conjunción 'y' como vocal cerrada: 'y antes' → sinalefa", () => {
