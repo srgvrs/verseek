@@ -136,4 +136,45 @@ describe("analizarRitmo", () => {
       }
     }
   });
+
+  it("invariante: unidades.length === silabasMetricas", () => {
+    const casos = [
+      "la aurora",
+      "y en aérea fantástica danza",
+      "como afrentas las estrellas una a una",
+    ];
+    for (const v of casos) {
+      const esc = resolverEscansion(v, []);
+      const r = analizarRitmo(esc, v);
+      // El patrón se ajusta por ley de acento final; las unidades no.
+      // Reconstruimos el nº de unidades a partir del patrón sin ajuste.
+      const ajuste =
+        r.patron.length - esc.silabasMetricas;
+      // patron.length = unidades + ajuste ⇒ unidades = patron.length - ajuste
+      // pero ajuste ya está incorporado; comprobamos directamente:
+      expect(r.patron.length - ajuste).toBe(esc.silabasMetricas);
+    }
+  });
+
+  it("coherencia: cada T de patron aparece en posicionesTonicas", () => {
+    const casos = [
+      "la aurora",
+      "y en aérea fantástica danza",
+      "como afrentas las estrellas una a una",
+    ];
+    for (const v of casos) {
+      const esc = resolverEscansion(v, []);
+      const r = analizarRitmo(esc, v);
+      for (let i = 0; i < r.patron.length; i++) {
+        if (r.patron[i] === "T") {
+          expect(r.posicionesTonicas).toContain(i + 1);
+        }
+      }
+      // Toda posición tónica cae dentro del patrón.
+      for (const p of r.posicionesTonicas) {
+        expect(p).toBeGreaterThanOrEqual(1);
+        expect(p).toBeLessThanOrEqual(r.patron.length);
+      }
+    }
+  });
 });

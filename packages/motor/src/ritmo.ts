@@ -68,24 +68,117 @@ function ajusteFinal(verso: string): number {
 }
 
 /**
- * Construye el patrón de acentos a partir de la escansión resuelta.
+ * Construye las unidades métricas del verso: cada unidad es un grupo de
+ * índices de sílaba plana (0-based, sobre la concatenación de `silabear`
+ * por palabra) que cuentan como UNA sola sílaba métrica.
  *
- * §8.3: el patrón tiene exactamente `escansion.silabasMetricas + ajuste`
- * posiciones (el cómputo métrico final). Las tónicas se colocan según la
- * sílaba tónica de cada palabra, contando sílabas de izquierda a derecha.
- * Las sílabas ganadas por la ley de acento final (aguda) se añaden como
- * átonas al final; las perdidas (esdrújula) se descartan del final.
+ * §8.4: cada frontera `{palabraA, palabraB}` en `esc.fronterasSinalefa`
+ * fusiona la última sílaba de A con la primera de B. Las fusiones pueden
+ * encadenarse (p. ej. "una a una": la sílaba final de "una" se fusiona con
+ * "a", y esa "a" se fusiona con la inicial de "una" final), así que se
+ * agrupa por componentes conectados (union-find), no con `i += 2`.
+ *
+ * Invariante: `unidades.length === esc.silabasMetricas`.
  */
-function construirPatron(escansion: Escansion, verso: string): ("T" | "a")[] {
+function unidadesMetricas(
+  escansion: Escansion,
+  verso: string,
+): number[][] {
   const palabras = partirPalabras(verso);
-  const patron: ("T" | "a")[] = [];
 
+  // Índice plano de la primera sílaba de cada palabra y total de sílabas.
+  const inicioPalabra: number[] = [];
+  const silabasPorPalabra: number[] = [];
+  let total = 0;
+  for (const p of palabras) {
+    inicioPalabra.push(total);
+    const n = silabear(p).length;
+    silabasPorPalabra.push(n);
+    total += n;
+  }
+
+  // Union-find sobre índices de sílaba plana.
+  const padre: number[] = [];
+  for (let i = 0; i < total; i++) padre.push(i);
+  const encontrar = (x: number): number => {
+    let r = x;
+    while (padre[r] !== r) r = padre[r] as number;
+    // Compresión de camino.
+    let c = x;
+    while (padre[c] !== r) {
+      const sig = padre[c] as number;
+      padre[c] = r;
+      c = sig;
+    }
+    return r;
+  };
+  const unir = (a: number, b: number): void => {
+    const ra = encontrar(a);
+    const rb = encontrar(b);
+    if (ra !== rb) padre[rb] = ra;
+  };
+
+  for (const f of escansion.fronterasSinalefa) {
+    const inicioA = inicioPalabra[f.palabraA];
+    const inicioB = inicioPalabra[f.palabraB];
+    const nA = silabasPorPalabra[f.palabraA];
+    if (inicioA === undefined || inicioB === undefined || nA === undefined) {
+      continue;
+    }
+    if (nA === 0) continue;
+    const idxA = inicioA + nA - 1;
+    const idxB = inicioB;
+    if (idxA < 0 || idxB >= total) continue;
+    unir(idxA, idxB);
+  }
+
+  // Agrupar por raíz, preservando el orden de aparición.
+  const grupos = new Map<number, number[]>();
+  const orden: number[] = [];
+  for (let i = 0; i < total; i++) {
+    const r = encontrar(i);
+    let g = grupos.get(r);
+    if (g === undefined) {
+      g = [];
+      grupos.set(r, g);
+      orden.push(r);
+    }
+    g.push(i);
+  }
+  return orden.map((r) => grupos.get(r) as number[]);
+}
+
+/** Tónicas por sílaba plana (mismo criterio que `construirPatron`). */
+function tonicasPorSilaba(verso: string): boolean[] {
+  const palabras = partirPalabras(verso);
+  const out: boolean[] = [];
   for (const p of palabras) {
     const silabas = silabear(p);
     const { silabaTonica } = clasificarAcento(p);
     for (let i = 0; i < silabas.length; i++) {
-      patron.push(i === silabaTonica ? "T" : "a");
+      out.push(i === silabaTonica);
     }
+  }
+  return out;
+}
+
+/**
+ * Construye el patrón de acentos a partir de las unidades métricas.
+ *
+ * §8.3: el patrón tiene exactamente `escansion.silabasMetricas + ajuste`
+ * posiciones (el cómputo métrico final). Una unidad es tónica si cualquiera
+ * de sus sílabas planas lo es. Las sílabas ganadas por la ley de acento
+ * final (aguda) se añaden como átonas al final; las perdidas (esdrújula)
+ * se descartan del final.
+ */
+function construirPatron(escansion: Escansion, verso: string): ("T" | "a")[] {
+  const unidades = unidadesMetricas(escansion, verso);
+  const tonicas = tonicasPorSilaba(verso);
+
+  const patron: ("T" | "a")[] = [];
+  for (const u of unidades) {
+    const esTonica = u.some((i) => tonicas[i] === true);
+    patron.push(esTonica ? "T" : "a");
   }
 
   // §8.3: ajustar la longitud al cómputo métrico final.
@@ -98,75 +191,22 @@ function construirPatron(escansion: Escansion, verso: string): ("T" | "a")[] {
 }
 
 /**
- * Calcula las posiciones tónicas (1-based) sobre las unidades métricas
- * resultantes de fusionar sílabas por sinalefa.
- *
- * §8.4: cada frontera `{palabraA, palabraB}` en `esc.fronterasSinalefa`
- * fusiona la última sílaba de A con la primera de B en una sola unidad.
- * La unidad es tónica si cualquiera de sus componentes lo es.
- *
- * El mapeo sílaba→palabra se reconstruye a partir de `partirPalabras` y
- * `silabear`, que es exactamente cómo `escansion.ts` construye `esc.silabas`
- * (concatenación de sílabas por palabra, en orden). No se tocan tipos ni
- * `escansion.ts`.
+ * Calcula las posiciones tónicas (1-based) sobre las unidades métricas.
+ * Una unidad es tónica si cualquiera de sus sílabas planas lo es.
  */
-function posicionesTonicasFusionadas(
+function posicionesTonicas(
   escansion: Escansion,
   verso: string,
 ): number[] {
-  const palabras = partirPalabras(verso);
+  const unidades = unidadesMetricas(escansion, verso);
+  const tonicas = tonicasPorSilaba(verso);
 
-  // Índice plano de la primera sílaba de cada palabra dentro de esc.silabas.
-  const inicioPalabra: number[] = [];
-  let acumulado = 0;
-  for (const p of palabras) {
-    inicioPalabra.push(acumulado);
-    acumulado += silabear(p).length;
-  }
-
-  // Tónicas por sílaba plana (mismo criterio que construirPatron).
-  const tonicaPorSilaba: boolean[] = [];
-  for (const p of palabras) {
-    const silabas = silabear(p);
-    const { silabaTonica } = clasificarAcento(p);
-    for (let i = 0; i < silabas.length; i++) {
-      tonicaPorSilaba.push(i === silabaTonica);
-    }
-  }
-
-  // Fronteras de sinalefa: índice plano de la sílaba A (última de palabraA)
-  // y de la sílaba B (primera de palabraB).
-  const fusiones = new Map<number, number>(); // idxA -> idxB
-  for (const f of escansion.fronterasSinalefa) {
-    const inicioA = inicioPalabra[f.palabraA];
-    const inicioB = inicioPalabra[f.palabraB];
-    if (inicioA === undefined || inicioB === undefined) continue;
-    const silabasA = silabear(palabras[f.palabraA] ?? "").length;
-    if (silabasA === 0) continue;
-    const idxA = inicioA + silabasA - 1;
-    const idxB = inicioB;
-    fusiones.set(idxA, idxB);
-  }
-
-  // Recorremos las sílabas planas agrupando en unidades métricas.
   const posiciones: number[] = [];
-  let unidad = 0;
-  let i = 0;
-  const total = tonicaPorSilaba.length;
-  while (i < total) {
-    unidad += 1;
-    let tonica = tonicaPorSilaba[i] === true;
-    const fusion = fusiones.get(i);
-    if (fusion !== undefined && fusion === i + 1) {
-      // La sílaba i y la i+1 forman una sola unidad.
-      tonica = tonica || tonicaPorSilaba[i + 1] === true;
-      i += 2;
-    } else {
-      i += 1;
-    }
-    if (tonica) posiciones.push(unidad);
+  for (let u = 0; u < unidades.length; u++) {
+    const grupo = unidades[u];
+    if (grupo === undefined) continue;
+    if (grupo.some((i) => tonicas[i] === true)) posiciones.push(u + 1);
   }
-
   return posiciones;
 }
 
@@ -235,7 +275,7 @@ function etiquetar(
  */
 export function analizarRitmo(escansion: Escansion, verso: string): Ritmo {
   const patron = construirPatron(escansion, verso);
-  const posiciones = posicionesTonicasFusionadas(escansion, verso);
+  const posiciones = posicionesTonicas(escansion, verso);
   const { etiqueta, confianza } = etiquetar(posiciones, patron.length);
   return { patron, posicionesTonicas: posiciones, etiqueta, confianza };
 }
