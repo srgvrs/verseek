@@ -244,7 +244,7 @@
   "texto": "de nocturno Faetón carroza ardiente",
   "fuente": "Domínguez Caparrós, p. 58",
   "escansion": "de-noc-tur-no Fa-e-tón ca-rro-zaar-dien-te",
-  "elecciones": [{ "tipo": "sineresis", "palabraA": 2, "palabraB": 2 }],
+  "elecciones": [{ "tipo": "sineresis", "palabraA": 2, "palabraB": 2, "valor": "aplicar" }],
   "metricas": 11,
   "categoria": "sineresis"
 }
