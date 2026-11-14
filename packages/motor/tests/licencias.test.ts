@@ -65,6 +65,14 @@ describe("detectarCandidatos", () => {
     expect(cs.find((c) => c.tipo === "dieresis")).toBeDefined();
   });
 
+  it("LIC-08: diéresis en palabra de una sílaba: 'fluir' → dieresis", () => {
+    const cs = detectarCandidatos("fluir");
+    const d = cs.find((c) => c.tipo === "dieresis");
+    expect(d).toBeDefined();
+    expect(d?.silabasSin).toBe(1);
+    expect(d?.silabasCon).toBe(2);
+  });
+
   it("verso vacío: sin candidatos", () => {
     expect(detectarCandidatos("")).toEqual([]);
   });

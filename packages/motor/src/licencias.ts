@@ -175,7 +175,7 @@ function candidatosIntraPalabra(palabras: readonly string[]): Candidato[] {
     const p = palabras[i];
     if (p === undefined) continue;
     const silabas = silabear(p);
-    if (silabas.length < 2) continue;
+    if (silabas.length === 0) continue;
 
     // §5.4 sinéresis: dos sílabas contiguas cuyas vocales podrían fusionarse.
     for (let k = 0; k < silabas.length - 1; k++) {
