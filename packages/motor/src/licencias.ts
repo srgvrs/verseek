@@ -65,6 +65,8 @@ function esTildada(c: string): boolean {
 
 /** Primera letra vocal de la palabra, saltando *h* muda inicial (§5.7). */
 function primeraVocal(palabra: string): { letra: string; indice: number } | null {
+  // §SIL-10: la conjunción "y" cuenta como vocal cerrada.
+  if (palabra.toLowerCase() === "y") return { letra: "i", indice: 0 };
   for (let i = 0; i < palabra.length; i++) {
     const c = palabra[i];
     if (c === undefined) continue;
@@ -78,6 +80,8 @@ function primeraVocal(palabra: string): { letra: string; indice: number } | null
 
 /** Última letra vocal de la palabra. */
 function ultimaVocal(palabra: string): { letra: string; indice: number } | null {
+  // §SIL-10: la conjunción "y" cuenta como vocal cerrada.
+  if (palabra.toLowerCase() === "y") return { letra: "i", indice: 0 };
   for (let i = palabra.length - 1; i >= 0; i--) {
     const c = palabra[i];
     if (c === undefined) continue;

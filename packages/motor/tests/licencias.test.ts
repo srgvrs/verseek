@@ -91,4 +91,12 @@ describe("detectarCandidatos", () => {
     const cs = detectarCandidatos("la ía");
     expect(cs.find((c) => c.tipo === "sinalefa")).toBeUndefined();
   });
+
+  it("conjunción 'y' como vocal cerrada: 'y antes' → sinalefa", () => {
+    const cs = detectarCandidatos("y antes");
+    const sin = cs.find((c) => c.tipo === "sinalefa");
+    expect(sin).toBeDefined();
+    expect(sin?.palabraA).toBe(0);
+    expect(sin?.palabraB).toBe(1);
+  });
 });
