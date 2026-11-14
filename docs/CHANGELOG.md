@@ -33,6 +33,37 @@
 - UI, Web Worker, IndexedDB, Capacitor (fases 3–5).
 ## [Unreleased]
 
+### Estado al 2026-11-14
+
+**Fase 2 en curso** (no completada). Corrección respecto a la entrada previa
+que la daba por cerrada.
+
+#### Hecho
+- **Cómputo silábico validado**: `tests/corpus.test.ts` pasa completo con
+  **27 versos** en el corpus de oro.
+- `Escansion` expone `fronterasSinalefa`.
+- `ritmo.ts` calcula unidades métricas con sinalefas encadenadas; `patron` y
+  `posicionesTonicas` se derivan de las mismas unidades.
+- `esAtono` en `acento.ts` (ACE-05, lista propuesta) con la excepción del
+  monosílabo final (ACE-05b).
+- Pruebas ACE-05b del monosílabo final de verso.
+- Sinéresis/diéresis respetadas al calcular unidades métricas (OVR-05,
+  propuesta).
+
+#### Pendiente
+- `tests/corpus-ritmo.test.ts`: **17 fallos**. Hipótesis por verificar: la
+  mayoría serían oráculos `tonicas` del JSON sin contrastar con la fuente; no
+  confirmado. Falta definir en el SPEC qué significa `tonicas` (propuesta:
+  tónicas léxicas con ACE-05, sin acento rítmico).
+- D6 (adverbios en `-mente`).
+- D11 (`ü` automática).
+- Anclaje de elecciones intra-palabra.
+- Script de revisión de tónicas: necesita runner; se propone `tsx`.
+- Limpieza de notas "BUG MOTOR" obsoletas en el JSON del corpus.
+- Orden de docs en git (ruta de archivos movidos) — **por confirmar**.
+- Unificar los dos SPEC (`SPEC.md` y `SPEC.propuesta.md`) — **por confirmar**
+  cuál es la fuente canónica.
+
 ### Added
 - `packages/motor/src/escansion.ts`: `resolverEscansion(verso, elecciones)`
   resuelve candidatos de `licencias.ts` contra las `Eleccion[]` del usuario
