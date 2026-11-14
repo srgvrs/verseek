@@ -97,13 +97,77 @@ function construirPatron(escansion: Escansion, verso: string): ("T" | "a")[] {
   return patron;
 }
 
-/** Posiciones (1-based) de las tónicas en el patrón. */
-function posicionesTonicas(patron: readonly ("T" | "a")[]): number[] {
-  const out: number[] = [];
-  for (let i = 0; i < patron.length; i++) {
-    if (patron[i] === "T") out.push(i + 1);
+/**
+ * Calcula las posiciones tónicas (1-based) sobre las unidades métricas
+ * resultantes de fusionar sílabas por sinalefa.
+ *
+ * §8.4: cada frontera `{palabraA, palabraB}` en `esc.fronterasSinalefa`
+ * fusiona la última sílaba de A con la primera de B en una sola unidad.
+ * La unidad es tónica si cualquiera de sus componentes lo es.
+ *
+ * El mapeo sílaba→palabra se reconstruye a partir de `partirPalabras` y
+ * `silabear`, que es exactamente cómo `escansion.ts` construye `esc.silabas`
+ * (concatenación de sílabas por palabra, en orden). No se tocan tipos ni
+ * `escansion.ts`.
+ */
+function posicionesTonicasFusionadas(
+  escansion: Escansion,
+  verso: string,
+): number[] {
+  const palabras = partirPalabras(verso);
+
+  // Índice plano de la primera sílaba de cada palabra dentro de esc.silabas.
+  const inicioPalabra: number[] = [];
+  let acumulado = 0;
+  for (const p of palabras) {
+    inicioPalabra.push(acumulado);
+    acumulado += silabear(p).length;
   }
-  return out;
+
+  // Tónicas por sílaba plana (mismo criterio que construirPatron).
+  const tonicaPorSilaba: boolean[] = [];
+  for (const p of palabras) {
+    const silabas = silabear(p);
+    const { silabaTonica } = clasificarAcento(p);
+    for (let i = 0; i < silabas.length; i++) {
+      tonicaPorSilaba.push(i === silabaTonica);
+    }
+  }
+
+  // Fronteras de sinalefa: índice plano de la sílaba A (última de palabraA)
+  // y de la sílaba B (primera de palabraB).
+  const fusiones = new Map<number, number>(); // idxA -> idxB
+  for (const f of escansion.fronterasSinalefa) {
+    const inicioA = inicioPalabra[f.palabraA];
+    const inicioB = inicioPalabra[f.palabraB];
+    if (inicioA === undefined || inicioB === undefined) continue;
+    const silabasA = silabear(palabras[f.palabraA] ?? "").length;
+    if (silabasA === 0) continue;
+    const idxA = inicioA + silabasA - 1;
+    const idxB = inicioB;
+    fusiones.set(idxA, idxB);
+  }
+
+  // Recorremos las sílabas planas agrupando en unidades métricas.
+  const posiciones: number[] = [];
+  let unidad = 0;
+  let i = 0;
+  const total = tonicaPorSilaba.length;
+  while (i < total) {
+    unidad += 1;
+    let tonica = tonicaPorSilaba[i] === true;
+    const fusion = fusiones.get(i);
+    if (fusion !== undefined && fusion === i + 1) {
+      // La sílaba i y la i+1 forman una sola unidad.
+      tonica = tonica || tonicaPorSilaba[i + 1] === true;
+      i += 2;
+    } else {
+      i += 1;
+    }
+    if (tonica) posiciones.push(unidad);
+  }
+
+  return posiciones;
 }
 
 /**
@@ -171,7 +235,7 @@ function etiquetar(
  */
 export function analizarRitmo(escansion: Escansion, verso: string): Ritmo {
   const patron = construirPatron(escansion, verso);
-  const posiciones = posicionesTonicas(patron);
+  const posiciones = posicionesTonicasFusionadas(escansion, verso);
   const { etiqueta, confianza } = etiquetar(posiciones, patron.length);
   return { patron, posicionesTonicas: posiciones, etiqueta, confianza };
 }

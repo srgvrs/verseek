@@ -64,6 +64,22 @@ describe("analizarRitmo", () => {
     expect(r.posicionesTonicas).toEqual([1, 3]);
   });
 
+  it("'la aurora' sin elecciones: 'ro' queda en posición 2 (sinalefa por defecto)", () => {
+    const esc = resolverEscansion("la aurora", []);
+    const r = analizarRitmo(esc, "la aurora");
+    // Unidades: [la‿au] [ro] [ra] → tónicas en 1 (la) y 2 (ro).
+    expect(r.posicionesTonicas).toEqual([1, 2]);
+  });
+
+  it("'la aurora' con sinalefa no-aplicar: 'ro' queda en posición 3", () => {
+    const esc = resolverEscansion("la aurora", [
+      { tipo: "sinalefa", palabraA: 0, palabraB: 1, valor: "no-aplicar" },
+    ]);
+    const r = analizarRitmo(esc, "la aurora");
+    // Unidades: [la] [au] [ro] [ra] → tónicas en 1 (la) y 3 (ro).
+    expect(r.posicionesTonicas).toEqual([1, 3]);
+  });
+
   it("'en un lugar': tónicas en 1 y 3 → yámbico (última impar)", () => {
     const esc = resolverEscansion("en un lugar", []);
     const r = analizarRitmo(esc, "en un lugar");
