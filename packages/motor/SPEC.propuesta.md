@@ -287,6 +287,86 @@ export function clasificarAcento(palabra: string): ResultadoAcento;
 
 ---
 
+## §5 Licencias (spike)
+
+Contexto del `SPEC.md` real: §5 tiene LIC-01…LIC-0N en estado `propuesta` /
+`pendiente`. Aquí se concretan para poder implementar `licencias.ts`.
+
+### §5.1 Firma y resultado
+
+```ts
+export type TipoLicencia = "sinalefa" | "hiato" | "sineresis" | "dieresis";
+
+export interface Candidato {
+  readonly tipo: TipoLicencia;
+  readonly palabraA: number;
+  readonly palabraB: number;
+  readonly silabaA: string;
+  readonly silabaB: string;
+  readonly silabasSin: number;
+  readonly silabasCon: number;
+}
+
+export function detectarCandidatos(verso: string): readonly Candidato[];
+```
+
+// [DECISIÓN] La firma es `detectarCandidatos(verso: string): readonly Candidato[]`. El motor NO elige: devuelve todas las opciones posibles para que el caller (UI / `computo`) decida.
+// Justificación: el SPEC real exige que el motor sea determinista y que la elección de licencias sea explícita del usuario; devolver opciones es la única forma de cumplirlo.
+
+// [DECISIÓN] Cada `Candidato` describe una frontera (entre palabras) o un punto intra-palabra, con `silabasSin` (baseline) y `silabasCon` (tras aplicar la licencia).
+// Justificación: `computo` necesita saber cuántas sílabas gana/pierde cada opción para enumerar combinaciones.
+
+// [DECISIÓN] `palabraA` y `palabraB` son índices 0-based en el verso; para licencias intra-palabra, `palabraA === palabraB`.
+// Justificación: permite al caller mapear el candidato a la UI sin recalcular.
+
+### §5.2 Sinalefa
+
+// [DECISIÓN] Hay sinalefa cuando la última vocal de la palabra A y la primera vocal de la palabra B pueden fusionarse en una sola sílaba.
+// Justificación: LIC-01.
+
+// [DECISIÓN] La sinalefa se ofrece como candidato SIEMPRE que ambas palabras empiecen/terminen en vocal, salvo que la fusión esté bloqueada por una cerrada tónica (§5.3).
+// Justificación: el motor no decide; el usuario puede querer sinalefa incluso donde la regla general no la aplicaría.
+
+### §5.3 Hiato entre palabras
+
+// [DECISIÓN] Se ofrece `hiato` como alternativa a la sinalefa cuando la fusión es plausible (no hay cerrada tónica en los extremos).
+// Justificación: LIC-02; el usuario puede preferir no fusionar.
+
+// [DECISIÓN] Si la vocal final de A o la inicial de B es una cerrada tónica (`í`, `ú`), NO se ofrece sinalefa (la fusión está bloqueada por regla de silabeo §3.4).
+// Justificación: coherencia con §3.4; ofrecer una sinalefa imposible confundiría al usuario.
+
+### §5.4 Sinéresis
+
+// [DECISIÓN] Se ofrece `sineresis` para cada par de sílabas contiguas dentro de una palabra que estén en hiato (abierta+abierta, o cerrada tónica + vocal).
+// Justificación: LIC-03; la sinéresis es la licencia que deshace un hiato.
+
+### §5.5 Diéresis
+
+// [DECISIÓN] Se ofrece `dieresis` para cada sílaba que contenga un diptongo (abierta+cerrada o dos cerradas distintas).
+// Justificación: LIC-04; la diéresis es la licencia que deshace un diptongo.
+
+### §5.6 Puntuación
+
+// [DECISIÓN] La presencia de cualquier carácter no-espacio entre dos palabras (coma, punto, guion, etc.) BLOQUEA la sinalefa entre ellas.
+// Justificación: LIC-05; la puntuación marca pausa y la sinalefa no la cruza.
+
+### §5.7 *h* muda
+
+// [DECISIÓN] Una *h* muda al inicio de la palabra B NO bloquea la sinalefa: `mi hermano` → `mier-ma-no` (sinalefa).
+// Justificación: LIC-04 + NOR-03; la *h* muda no suena y no impide la fusión.
+
+// [DECISIÓN] La *h* aspirada (préstamos, `hámster`, `hacha` en algunas hablas) queda FUERA de alcance de este spike: se trata como muda.
+// Justificación: no hay forma fiable de detectarla sin diccionario; el usuario puede forzar el caso con `excepciones.json` en el futuro.
+
+### §5.8 Fuera de alcance de `licencias`
+
+- Elección de qué combinación de licencias aplicar: `computo` / UI.
+- Cómputo métrico final (suma de sílabas, ajuste por agudeza): `computo`.
+- Sinalefa a través de puntuación: prohibida (§5.6).
+- *h* aspirada: fuera de alcance (§5.7).
+
+---
+
 ## §13 Contratos públicos (spike)
 
 // [DECISIÓN] Se declaran aquí los contratos de `normalizar` y `silabeo`. Los contratos de `acento`, `licencias`, `computo`, `Candidato` y `Eleccion` NO se definen todavía.
@@ -328,16 +408,35 @@ export function clasificarAcento(palabra: string): ResultadoAcento;
 ```
 
 ```ts
+// packages/motor/src/licencias.ts — superficie pública
+export type TipoLicencia = "sinalefa" | "hiato" | "sineresis" | "dieresis";
+
+export interface Candidato {
+  readonly tipo: TipoLicencia;
+  readonly palabraA: number;
+  readonly palabraB: number;
+  readonly silabaA: string;
+  readonly silabaB: string;
+  readonly silabasSin: number;
+  readonly silabasCon: number;
+}
+
+export function detectarCandidatos(verso: string): readonly Candidato[];
+```
+
+```ts
 // packages/motor/src/index.ts — reexports de la fachada
 export type { ResultadoNormalizacion } from "./normalizar.js";
 export type { Silaba } from "./silabeo.js";
 export type { ResultadoAcento, TipoAcento } from "./acento.js";
+export type { Candidato, TipoLicencia } from "./licencias.js";
 export { normalizar } from "./normalizar.js";
 export { silabear } from "./silabeo.js";
 export { clasificarAcento } from "./acento.js";
+export { detectarCandidatos } from "./licencias.js";
 ```
 
-// [DECISIÓN] `index.ts` reexporta `normalizar`, `silabear`, `clasificarAcento` y sus tipos, y nada más, hasta que existan los demás módulos.
+// [DECISIÓN] `index.ts` reexporta `normalizar`, `silabear`, `clasificarAcento`, `detectarCandidatos` y sus tipos, y nada más, hasta que existan los demás módulos.
 // Justificación: la fachada pública no debe exponer símbolos no implementados.
 
 ---
@@ -389,3 +488,13 @@ export { clasificarAcento } from "./acento.js";
 | S-41  | §4.4    | monosílabos → tipo `monosilabo`                      | spike        |
 | S-42  | §4.5    | adverbios `-mente` → analizar base                   | spike        |
 | S-43  | §4.6    | palabra vacía/sin vocales → `monosilabo`             | spike        |
+| S-44  | §5.1    | firma `detectarCandidatos(verso) → Candidato[]`      | spike        |
+| S-45  | §5.1    | `Candidato` con `{ tipo, palabraA, palabraB, silabaA, silabaB, silabasSin, silabasCon }` | spike |
+| S-46  | §5.1    | motor NO elige; devuelve opciones                    | spike        |
+| S-47  | §5.2    | sinalefa si ambas palabras empiezan/terminan en vocal | spike       |
+| S-48  | §5.3    | hiato como alternativa; bloqueado por cerrada tónica | spike        |
+| S-49  | §5.4    | sinéresis intra-palabra (hiato → diptongo)           | spike        |
+| S-50  | §5.5    | diéresis intra-palabra (diptongo → hiato)            | spike        |
+| S-51  | §5.6    | puntuación entre palabras bloquea sinalefa           | spike        |
+| S-52  | §5.7    | *h* muda inicial no bloquea sinalefa                 | spike        |
+| S-53  | §5.7    | *h* aspirada fuera de alcance                        | spike        |
