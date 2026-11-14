@@ -59,6 +59,12 @@ function clave(tipo: TipoLicencia, palabraA: number, palabraB: number): string {
   return `${tipo}:${palabraA}:${palabraB}`;
 }
 
+/** §LIC-03: conjunciones de una letra que pueden formar sinalefa triple. */
+function esConjuncionBreve(palabra: string): boolean {
+  const l = palabra.toLowerCase();
+  return l === "y" || l === "e" || l === "o";
+}
+
 /**
  * Construye el índice de candidatos por clave. Si hay varios candidatos con
  * la misma clave (no debería ocurrir con `licencias.ts` actual), se conserva
@@ -116,6 +122,15 @@ export function resolverEscansion(
     for (const s of silabear(p)) silabasBase.push(s);
   }
 
+  // §LIC-03: índice de fronteras con sinalefa candidata, para detectar
+  // sinalefa triple con conjunción breve en el centro.
+  const fronterasSinalefa = new Set<string>();
+  for (const c of candidatos) {
+    if (c.tipo === "sinalefa") {
+      fronterasSinalefa.add(`${c.palabraA}:${c.palabraB}`);
+    }
+  }
+
   // §6.5 + LIC-01: la sinalefa se aplica por defecto. Sinéresis y diéresis
   // solo por elección explícita del usuario.
   //
@@ -138,6 +153,21 @@ export function resolverEscansion(
         ((eleccion.tipo === "sinalefa" && eleccion.valor === "no-aplicar") ||
           (eleccion.tipo === "hiato" && eleccion.valor === "aplicar"));
       if (desactivada) continue;
+
+      // §LIC-03: si la palabra B es una conjunción breve (y/e/o) y también
+      // hay sinalefa entre esa conjunción y la palabra siguiente, no aplicar
+      // la primera (evita la sinalefa triple). Una elección explícita del
+      // usuario sigue mandando.
+      const palabraB = palabras[c.palabraB];
+      if (
+        eleccion === undefined &&
+        palabraB !== undefined &&
+        esConjuncionBreve(palabraB) &&
+        fronterasSinalefa.has(`${c.palabraB}:${c.palabraB + 1}`)
+      ) {
+        continue;
+      }
+
       delta += c.silabasCon - c.silabasSin;
       continue;
     }

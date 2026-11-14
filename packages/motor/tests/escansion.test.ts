@@ -103,6 +103,13 @@ describe("resolverEscansion", () => {
     expect(r.silabasMetricas).toBe(3);
   });
 
+  it("LIC-03: no aplica sinalefa triple con conjunción breve", () => {
+    // "encubre el cielo y amontona el viento" → 11 sílabas métricas.
+    // Sinalefas: breel, ya (cielo‿y‿amontona se evita la triple).
+    const r = resolverEscansion("encubre el cielo y amontona el viento", []);
+    expect(r.silabasMetricas).toBe(11);
+  });
+
   it("idempotencia: aplicar y deshacer vuelve al mismo estado", () => {
     const aplicar: Eleccion = {
       tipo: "sinalefa",
