@@ -69,10 +69,12 @@ function ajusteFinal(verso: string): number {
 
 /**
  * Construye el patrón de acentos a partir de la escansión resuelta.
- * Cada sílaba de cada palabra se marca `"T"` si es la tónica de su palabra,
- * `"a"` en caso contrario. Las sílabas ganadas por la ley de acento final
- * (aguda) se añaden como átonas al final; las perdidas (esdrújula) se
- * descartan del final.
+ *
+ * §8.3: el patrón tiene exactamente `escansion.silabasMetricas + ajuste`
+ * posiciones (el cómputo métrico final). Las tónicas se colocan según la
+ * sílaba tónica de cada palabra, contando sílabas de izquierda a derecha.
+ * Las sílabas ganadas por la ley de acento final (aguda) se añaden como
+ * átonas al final; las perdidas (esdrújula) se descartan del final.
  */
 function construirPatron(escansion: Escansion, verso: string): ("T" | "a")[] {
   const palabras = partirPalabras(verso);
@@ -86,16 +88,12 @@ function construirPatron(escansion: Escansion, verso: string): ("T" | "a")[] {
     }
   }
 
+  // §8.3: ajustar la longitud al cómputo métrico final.
   const ajuste = ajusteFinal(verso);
-  if (ajuste > 0) {
-    for (let k = 0; k < ajuste; k++) patron.push("a");
-  } else if (ajuste < 0) {
-    for (let k = 0; k < -ajuste; k++) patron.pop();
-  }
+  const objetivo = escansion.silabasMetricas + ajuste;
+  while (patron.length < objetivo) patron.push("a");
+  while (patron.length > objetivo) patron.pop();
 
-  // §8.3: el patrón refleja el cómputo métrico DESPUÉS de la ley de acento
-  // final. No se recorta contra `escansion.silabasMetricas` (que es el conteo
-  // previo al ajuste); hacerlo desharía la ley de acento final.
   return patron;
 }
 
@@ -147,9 +145,10 @@ function etiquetar(
     return { etiqueta: "anapestico", confianza: 0.7 };
   }
 
-  // §8.5: patrón binario. Se decide por la última tónica.
+  // §8.5: patrón binario. Se decide por la última tónica: par → yámbico,
+  // impar → trocaico (métrica acentual).
   if (deltas.length === 0 || todosIguales(2)) {
-    const etiqueta: EtiquetaRitmo = ultima % 2 === 0 ? "trocaico" : "yambico";
+    const etiqueta: EtiquetaRitmo = ultima % 2 === 0 ? "yambico" : "trocaico";
     const confianza = deltas.length === 0 ? 0.4 : 0.8;
     return { etiqueta, confianza };
   }
@@ -161,8 +160,9 @@ function etiquetar(
   }
 
   // §8.5: si el patrón no es uniforme, se clasifica por la paridad de la
-  // última tónica (métrica acentual). Confianza baja por la irregularidad.
-  const etiqueta: EtiquetaRitmo = ultima % 2 === 0 ? "trocaico" : "yambico";
+  // última tónica (métrica acentual): par → yámbico, impar → trocaico.
+  // Confianza baja por la irregularidad.
+  const etiqueta: EtiquetaRitmo = ultima % 2 === 0 ? "yambico" : "trocaico";
   return { etiqueta, confianza: 0.3 };
 }
 
