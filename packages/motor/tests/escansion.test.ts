@@ -21,6 +21,7 @@ describe("resolverEscansion", () => {
     // la‿au-ro-ra = 3 sílabas con sinalefa
     expect(r.silabasMetricas).toBe(3);
     expect(r.eleccionesAplicadas).toEqual([]);
+    expect(r.fronterasSinalefa).toEqual([{ palabraA: 0, palabraB: 1 }]);
   });
 
   it("sinalefa aplicada: −1 sílaba", () => {
@@ -46,6 +47,7 @@ describe("resolverEscansion", () => {
     const r = resolverEscansion("la aurora", [e]);
     expect(r.silabasMetricas).toBe(4);
     expect(r.eleccionesAplicadas).toEqual([e]);
+    expect(r.fronterasSinalefa).toEqual([]);
   });
 
   it("elección huérfana: se reporta, no se aplica", () => {
@@ -121,6 +123,17 @@ describe("resolverEscansion", () => {
     // Sinalefas: breel, ya (cielo‿y‿amontona se evita la triple).
     const r = resolverEscansion("encubre el cielo y amontona el viento", []);
     expect(r.silabasMetricas).toBe(11);
+  });
+
+  it("fronterasSinalefa incluye 0:1 en 'y en aérea fantástica danza'", () => {
+    const e: Eleccion = {
+      tipo: "sineresis",
+      palabraA: 2,
+      palabraB: 2,
+      valor: "aplicar",
+    };
+    const r = resolverEscansion("y en aérea fantástica danza", [e]);
+    expect(r.fronterasSinalefa).toContainEqual({ palabraA: 0, palabraB: 1 });
   });
 
   it("idempotencia: aplicar y deshacer vuelve al mismo estado", () => {

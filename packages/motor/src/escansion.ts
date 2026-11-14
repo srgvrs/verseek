@@ -27,6 +27,11 @@ export interface Eleccion {
   readonly valor: "aplicar" | "no-aplicar";
 }
 
+export interface FronteraSinalefa {
+  readonly palabraA: number;
+  readonly palabraB: number;
+}
+
 export interface Escansion {
   /** Sílaba a sílaba del verso, ya con las licencias aplicadas. */
   readonly silabas: readonly Silaba[];
@@ -36,6 +41,8 @@ export interface Escansion {
   readonly eleccionesAplicadas: readonly Eleccion[];
   /** Elecciones que no coincidieron con ningún candidato. */
   readonly eleccionesHuerfanas: readonly Eleccion[];
+  /** Fronteras donde la sinalefa quedó activa (por defecto o por elección). */
+  readonly fronterasSinalefa: readonly FronteraSinalefa[];
 }
 
 /** Divide el verso en palabras (secuencias de letras), igual que `licencias`. */
@@ -79,6 +86,42 @@ function indexarCandidatos(
     if (!mapa.has(k)) mapa.set(k, c);
   }
   return mapa;
+}
+
+/**
+ * Decide si un candidato de sinalefa queda activo tras aplicar las reglas
+ * del bloque de delta (§6.5 + LIC-01 + LIC-03). Compartida por el cálculo
+ * de `silabasMetricas` y la recolección de `fronterasSinalefa`.
+ */
+function sinalefaActiva(
+  c: Candidato,
+  palabras: readonly string[],
+  porFrontera: ReadonlyMap<string, Eleccion>,
+  fronterasSinalefa: ReadonlySet<string>,
+): boolean {
+  const kFrontera = `${c.palabraA}:${c.palabraB}`;
+  const eleccion = porFrontera.get(kFrontera);
+  const desactivada =
+    eleccion !== undefined &&
+    ((eleccion.tipo === "sinalefa" && eleccion.valor === "no-aplicar") ||
+      (eleccion.tipo === "hiato" && eleccion.valor === "aplicar"));
+  if (desactivada) return false;
+
+  // §LIC-03: si la palabra B es una conjunción breve (y/e/o) y también
+  // hay sinalefa entre esa conjunción y la palabra siguiente, no aplicar
+  // la primera (evita la sinalefa triple). Una elección explícita del
+  // usuario sigue mandando.
+  const palabraB = palabras[c.palabraB];
+  if (
+    eleccion === undefined &&
+    palabraB !== undefined &&
+    esConjuncionBreve(palabraB) &&
+    fronterasSinalefa.has(`${c.palabraB}:${c.palabraB + 1}`)
+  ) {
+    return false;
+  }
+
+  return true;
 }
 
 /**
@@ -142,33 +185,17 @@ export function resolverEscansion(
   //    desactivar la sinalefa de su frontera.
   //  - sinéresis / diéresis: activas solo si el usuario elige `aplicar`.
   let delta = 0;
+  const fronterasActivas: FronteraSinalefa[] = [];
   for (const c of candidatos) {
     if (c.tipo === "hiato") continue;
 
     if (c.tipo === "sinalefa") {
-      const kFrontera = `${c.palabraA}:${c.palabraB}`;
-      const eleccion = porFrontera.get(kFrontera);
-      const desactivada =
-        eleccion !== undefined &&
-        ((eleccion.tipo === "sinalefa" && eleccion.valor === "no-aplicar") ||
-          (eleccion.tipo === "hiato" && eleccion.valor === "aplicar"));
-      if (desactivada) continue;
-
-      // §LIC-03: si la palabra B es una conjunción breve (y/e/o) y también
-      // hay sinalefa entre esa conjunción y la palabra siguiente, no aplicar
-      // la primera (evita la sinalefa triple). Una elección explícita del
-      // usuario sigue mandando.
-      const palabraB = palabras[c.palabraB];
-      if (
-        eleccion === undefined &&
-        palabraB !== undefined &&
-        esConjuncionBreve(palabraB) &&
-        fronterasSinalefa.has(`${c.palabraB}:${c.palabraB + 1}`)
-      ) {
+      if (!sinalefaActiva(c, palabras, porFrontera, fronterasSinalefa)) {
         continue;
       }
 
       delta += c.silabasCon - c.silabasSin;
+      fronterasActivas.push({ palabraA: c.palabraA, palabraB: c.palabraB });
       continue;
     }
 
@@ -194,5 +221,6 @@ export function resolverEscansion(
     silabasMetricas,
     eleccionesAplicadas: aplicadas,
     eleccionesHuerfanas: huerfanas,
+    fronterasSinalefa: fronterasActivas,
   };
 }
