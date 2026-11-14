@@ -16,7 +16,7 @@
  *    fusionarse en diptongo (opción alternativa).
  *  - §5.5 Diéresis: dentro de una palabra, un diptongo puede deshacerse en
  *    hiato (opción alternativa).
- *  - §5.6 La puntuación entre palabras BLOQUEA la sinalefa.
+ *  - §5.6 La puntuación entre palabras NO bloquea la sinalefa (LIC-05).
  *  - §5.7 *h* muda inicial de B no bloquea la sinalefa; *h* aspirada fuera
  *    de alcance.
  */
@@ -108,20 +108,6 @@ function partirPalabras(verso: string): readonly string[] {
   return out;
 }
 
-/** ¿Hay puntuación entre dos palabras en el verso original? (§5.6) */
-function hayPuntuacionEntre(verso: string, palabraA: string, palabraB: string): boolean {
-  const idxA = verso.indexOf(palabraA);
-  if (idxA < 0) return false;
-  const desde = idxA + palabraA.length;
-  const idxB = verso.indexOf(palabraB, desde);
-  if (idxB < 0) return false;
-  const entre = verso.slice(desde, idxB);
-  for (const c of entre) {
-    if (!/^\s$/u.test(c)) return true;
-  }
-  return false;
-}
-
 /**
  * Detecta candidatos de sinalefa / hiato entre palabras adyacentes.
  * Devuelve un candidato por frontera donde ambas palabras empiezan/terminan
@@ -141,8 +127,7 @@ function candidatosEntrePalabras(
     const iniB = primeraVocal(b);
     if (finA === null || iniB === null) continue;
 
-    // §5.6: puntuación entre palabras bloquea sinalefa.
-    if (hayPuntuacionEntre(verso, a, b)) continue;
+    // §5.6 (LIC-05): la puntuación NO bloquea la sinalefa.
 
     const silabasA = silabear(a);
     const silabasB = silabear(b);
@@ -152,11 +137,8 @@ function candidatosEntrePalabras(
 
     const base = silabasA.length + silabasB.length;
 
-    // §5.3: si hay cerrada tónica en los extremos, la fusión está bloqueada.
-    const fusionBloqueada =
-      (esCerrada(finA.letra) && esTildada(finA.letra)) ||
-      (esCerrada(iniB.letra) && esTildada(iniB.letra));
-    if (fusionBloqueada) continue;
+    // §5.3 (D7 cerrada): una vocal cerrada con tilde en el límite entre
+    // palabras NO bloquea la sinalefa ("su último" → su‿úl).
 
     // §5.2: sinalefa (fusiona).
     out.push({
