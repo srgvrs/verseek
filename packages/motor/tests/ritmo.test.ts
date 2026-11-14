@@ -215,4 +215,18 @@ describe("analizarRitmo", () => {
       }
     }
   });
+
+  it("ACE-05b: 'dime lo que' — 'que' final sigue tónico", () => {
+    const esc = resolverEscansion("dime lo que", []);
+    const r = analizarRitmo(esc, "dime lo que");
+    // di-me lo que → tónicas en 1 (di) y 4 (que, por ACE-05b).
+    expect(r.posicionesTonicas).toEqual([1, 4]);
+  });
+
+  it("ACE-05b: 'que dime lo' — 'que' inicial átono, 'lo' final tónico", () => {
+    const esc = resolverEscansion("que dime lo", []);
+    const r = analizarRitmo(esc, "que dime lo");
+    // que di-me lo → tónicas en 2 (di) y 4 (lo, por ACE-05b).
+    expect(r.posicionesTonicas).toEqual([2, 4]);
+  });
 });
