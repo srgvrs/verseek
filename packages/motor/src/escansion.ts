@@ -172,10 +172,18 @@ export function resolverEscansion(
       continue;
     }
 
-    // sinéresis / diéresis: solo por elección explícita.
-    const k = clave(c.tipo, c.palabraA, c.palabraB);
-    const eleccion = porFrontera.get(k);
-    if (eleccion === undefined || eleccion.valor !== "aplicar") continue;
+  }
+
+  // Sinéresis / diéresis: solo por elección explícita, y una sola vez por
+  // clave. Iteramos sobre `porFrontera` (ya deduplicado por clave) en lugar
+  // de `candidatos`, porque una misma palabra puede generar varios
+  // candidatos con la misma clave (p. ej. "aérea" → sineresis:2:2 dos veces)
+  // y sumaríamos el delta varias veces.
+  for (const [k, eleccion] of porFrontera) {
+    if (eleccion.tipo !== "sineresis" && eleccion.tipo !== "dieresis") continue;
+    if (eleccion.valor !== "aplicar") continue;
+    const c = indice.get(k);
+    if (c === undefined) continue;
     delta += c.silabasCon - c.silabasSin;
   }
 

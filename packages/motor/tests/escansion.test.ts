@@ -103,6 +103,19 @@ describe("resolverEscansion", () => {
     expect(r.silabasMetricas).toBe(3);
   });
 
+  it("sinéresis se aplica una sola vez aunque haya varios candidatos con la misma clave", () => {
+    // "aérea" genera sineresis:2:2 dos veces (a-é y re-a). La elección debe
+    // sumar el delta una sola vez: 11 → 10.
+    const e: Eleccion = {
+      tipo: "sineresis",
+      palabraA: 2,
+      palabraB: 2,
+      valor: "aplicar",
+    };
+    const r = resolverEscansion("y en aérea fantástica danza", [e]);
+    expect(r.silabasMetricas).toBe(10);
+  });
+
   it("LIC-03: no aplica sinalefa triple con conjunción breve", () => {
     // "encubre el cielo y amontona el viento" → 11 sílabas métricas.
     // Sinalefas: breel, ya (cielo‿y‿amontona se evita la triple).
