@@ -3,6 +3,16 @@ import { computar } from "../src/computo.js";
 import { resolverEscansion, type Eleccion } from "../src/escansion.js";
 
 describe("computar", () => {
+  it("DIAGNÓSTICO: 'el mar.' vs 'el mar' — ajuste y tipoFinal", () => {
+    const conPunto = computar(resolverEscansion("el mar.", []), "el mar.");
+    const sinPunto = computar(resolverEscansion("el mar", []), "el mar");
+    // eslint-disable-next-line no-console
+    console.log("conPunto:", conPunto);
+    // eslint-disable-next-line no-console
+    console.log("sinPunto:", sinPunto);
+    expect(conPunto.tipoFinal).toBe(sinPunto.tipoFinal);
+    expect(conPunto.ajuste).toBe(sinPunto.ajuste);
+  });
   it("verso vacío: cómputo 0, sin ajuste", () => {
     const esc = resolverEscansion("", []);
     const r = computar(esc, "");
