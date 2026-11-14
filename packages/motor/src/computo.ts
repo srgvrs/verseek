@@ -46,9 +46,11 @@ function ultimaPalabra(verso: string): string {
   return verso.slice(inicio, fin + 1);
 }
 
-/** Ajuste por ley de acento final (§7.4, §7.5). */
+/** Ajuste por ley de acento final (§7.4, §7.5, COM-02b). */
 function ajustePorTipo(tipo: TipoAcento): -1 | 0 | 1 {
-  if (tipo === "aguda") return 1;
+  // COM-02b: un verso que termina en monosílabo cuenta como agudo (+1),
+  // sea tónico o átono.
+  if (tipo === "aguda" || tipo === "monosilabo") return 1;
   if (tipo === "esdrujula" || tipo === "sobresdrujula") return -1;
   return 0;
 }

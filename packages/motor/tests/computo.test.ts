@@ -48,12 +48,26 @@ describe("computar", () => {
     expect(r.tipoFinal).toBe("esdrujula");
   });
 
-  it("monosílabo final: sin ajuste", () => {
-    // "sol" → monosílabo, 1 sílaba
+  it("monosílabo final: cuenta como agudo (+1) — COM-02b", () => {
+    // "sol" → monosílabo, 1 sílaba → 2
     const esc = resolverEscansion("sol", []);
     const r = computar(esc, "sol");
-    expect(r.silabasMetricas).toBe(1);
-    expect(r.ajuste).toBe(0);
+    expect(r.silabasMetricas).toBe(2);
+    expect(r.ajuste).toBe(1);
+    expect(r.tipoFinal).toBe("monosilabo");
+  });
+
+  it("COM-02b: 'el mar' → +1", () => {
+    const esc = resolverEscansion("el mar", []);
+    const r = computar(esc, "el mar");
+    expect(r.ajuste).toBe(1);
+    expect(r.tipoFinal).toBe("monosilabo");
+  });
+
+  it("COM-02b: 'el camino y nada más' → +1", () => {
+    const esc = resolverEscansion("el camino y nada más", []);
+    const r = computar(esc, "el camino y nada más");
+    expect(r.ajuste).toBe(1);
     expect(r.tipoFinal).toBe("monosilabo");
   });
 
