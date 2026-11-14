@@ -116,13 +116,36 @@ export function resolverEscansion(
     for (const s of silabear(p)) silabasBase.push(s);
   }
 
-  // §6.5: sumamos deltas de sílabas por cada elección "aplicar".
+  // §6.5 + LIC-01: la sinalefa se aplica por defecto. Sinéresis y diéresis
+  // solo por elección explícita del usuario.
+  //
+  // Para cada candidato decidimos si está activo:
+  //  - sinalefa: activa salvo que el usuario la desactive con
+  //    `sinalefa:no-aplicar` o active el hiato con `hiato:aplicar` en la
+  //    misma frontera.
+  //  - hiato: nunca suma delta (es el baseline); su única función es
+  //    desactivar la sinalefa de su frontera.
+  //  - sinéresis / diéresis: activas solo si el usuario elige `aplicar`.
   let delta = 0;
-  for (const e of porFrontera.values()) {
-    if (e.valor !== "aplicar") continue;
-    const k = clave(e.tipo, e.palabraA, e.palabraB);
-    const c = indice.get(k);
-    if (c === undefined) continue;
+  for (const c of candidatos) {
+    if (c.tipo === "hiato") continue;
+
+    if (c.tipo === "sinalefa") {
+      const kFrontera = `${c.palabraA}:${c.palabraB}`;
+      const eleccion = porFrontera.get(kFrontera);
+      const desactivada =
+        eleccion !== undefined &&
+        ((eleccion.tipo === "sinalefa" && eleccion.valor === "no-aplicar") ||
+          (eleccion.tipo === "hiato" && eleccion.valor === "aplicar"));
+      if (desactivada) continue;
+      delta += c.silabasCon - c.silabasSin;
+      continue;
+    }
+
+    // sinéresis / diéresis: solo por elección explícita.
+    const k = clave(c.tipo, c.palabraA, c.palabraB);
+    const eleccion = porFrontera.get(k);
+    if (eleccion === undefined || eleccion.valor !== "aplicar") continue;
     delta += c.silabasCon - c.silabasSin;
   }
 
