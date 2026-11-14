@@ -44,32 +44,39 @@ describe("analizarRitmo", () => {
     expect(r.posicionesTonicas).toEqual([1]);
   });
 
-  it("'la aurora' sin sinalefa: tónicas en 1 y 3 → trocaico", () => {
+  it("'la aurora' sin sinalefa: tónica en 3 → trocaico (una sola tónica)", () => {
     const esc = resolverEscansion("la aurora", [
       { tipo: "sinalefa", palabraA: 0, palabraB: 1, valor: "no-aplicar" },
     ]);
     const r = analizarRitmo(esc, "la aurora");
-    // la(T) au-ro-ra(T en ro) → T-a-T-a
-    expect(r.patron).toEqual(["T", "a", "T", "a"]);
-    expect(r.posicionesTonicas).toEqual([1, 3]);
+    // Unidades: [la] [au] [ro] [ra] → tónica en 3 (ro).
+    expect(r.patron).toEqual(["a", "a", "T", "a"]);
+    expect(r.posicionesTonicas).toEqual([3]);
+    // Una sola tónica (deltas vacío): paridad de la última tónica (3, impar)
+    // → trocaico, con confianza baja.
     expect(r.etiqueta).toBe("trocaico");
+    expect(r.confianza).toBe(0.4);
   });
 
-  it("'la aurora' con sinalefa: tónicas en 1 y 2 → trocaico", () => {
+  it("'la aurora' con sinalefa: tónica en 2 → yambico (una sola tónica)", () => {
     const esc = resolverEscansion("la aurora", [
       { tipo: "sinalefa", palabraA: 0, palabraB: 1, valor: "aplicar" },
     ]);
     const r = analizarRitmo(esc, "la aurora");
-    // la(T) au-ro-ra(T en ro) con sinalefa → T-a-T
-    expect(r.patron).toEqual(["T", "a", "T"]);
-    expect(r.posicionesTonicas).toEqual([1, 3]);
+    // Unidades: [la‿au] [ro] [ra] → tónica en 2 (ro).
+    expect(r.patron).toEqual(["a", "T", "a"]);
+    expect(r.posicionesTonicas).toEqual([2]);
+    // Una sola tónica (deltas vacío): paridad de la última tónica (2, par)
+    // → yambico, con confianza baja.
+    expect(r.etiqueta).toBe("yambico");
+    expect(r.confianza).toBe(0.4);
   });
 
   it("'la aurora' sin elecciones: 'ro' queda en posición 2 (sinalefa por defecto)", () => {
     const esc = resolverEscansion("la aurora", []);
     const r = analizarRitmo(esc, "la aurora");
-    // Unidades: [la‿au] [ro] [ra] → tónicas en 1 (la) y 2 (ro).
-    expect(r.posicionesTonicas).toEqual([1, 2]);
+    // Unidades: [la‿au] [ro] [ra] → tónica en 2 (ro).
+    expect(r.posicionesTonicas).toEqual([2]);
   });
 
   it("'la aurora' con sinalefa no-aplicar: 'ro' queda en posición 3", () => {
@@ -77,8 +84,8 @@ describe("analizarRitmo", () => {
       { tipo: "sinalefa", palabraA: 0, palabraB: 1, valor: "no-aplicar" },
     ]);
     const r = analizarRitmo(esc, "la aurora");
-    // Unidades: [la] [au] [ro] [ra] → tónicas en 1 (la) y 3 (ro).
-    expect(r.posicionesTonicas).toEqual([1, 3]);
+    // Unidades: [la] [au] [ro] [ra] → tónica en 3 (ro).
+    expect(r.posicionesTonicas).toEqual([3]);
   });
 
   it("'en un lugar': tónicas en 1 y 3 → yámbico (última impar)", () => {
