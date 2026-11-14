@@ -228,6 +228,65 @@ export function silabear(palabra: string): readonly Silaba[];
 
 ---
 
+## §4 Acento (spike)
+
+Contexto del `SPEC.md` real: §4 tiene ACN-01…ACN-0N en estado `propuesta` /
+`pendiente`. Aquí se concretan para poder implementar `acento.ts`.
+
+### §4.1 Firma y resultado
+
+```ts
+export type TipoAcento = "aguda" | "llana" | "esdrujula" | "sobresdrujula" | "monosilabo";
+
+export interface ResultadoAcento {
+  readonly tipo: TipoAcento;
+  readonly silabaTonica: number;
+  readonly tonica: Silaba | null;
+  readonly silabas: readonly Silaba[];
+}
+
+export function clasificarAcento(palabra: string): ResultadoAcento;
+```
+
+// [DECISIÓN] La firma es `clasificarAcento(palabra: string): ResultadoAcento`, con `silabaTonica` como índice 0-based dentro de `silabas` y `tonica` como referencia directa a la sílaba.
+// Justificación: `licencias`/`computo` necesitan saber cuál es la tónica para aplicar sinalefa y para el cómputo métrico; devolver solo el tipo obligaría a recalcular.
+
+// [DECISIÓN] Los tipos son `readonly` y `silabas` es el array devuelto por `silabear` (misma partición).
+// Justificación: coherencia con §2.1 y §3.1; el caller puede reutilizar la partición.
+
+### §4.2 Tilde explícita
+
+// [DECISIÓN] Si la palabra contiene una vocal con tilde (`á é í ó ú`), la sílaba tónica es la que la porta y el tipo se deriva de su posición desde el final: última → aguda, penúltima → llana, antepenúltima → esdrújula, anterior → sobresdrújula.
+// Justificación: la tilde ortográfica es la señal más fiable; prevalece sobre la regla general.
+
+### §4.3 Regla general sin tilde
+
+// [DECISIÓN] Sin tilde: aguda si termina en vocal, `n` o `s`; llana en cualquier otro caso.
+// Justificación: regla estándar del español (RAE).
+
+### §4.4 Monosílabos
+
+// [DECISIÓN] Una palabra con una sola sílaba se clasifica como `monosilabo`, independientemente de su terminación.
+// Justificación: para métrica no hay distinción útil entre aguda/llana en monosílabos; el tipo `monosilabo` lo hace explícito.
+
+### §4.5 Adverbios en `-mente`
+
+// [DECISIÓN] Si la palabra termina en `-mente` (case-insensitive) y tiene más de 5 caracteres, se analiza la base (sin `-mente`) y se reporta el tipo de la base; la sílaba tónica es la de la base dentro de la palabra completa.
+// Justificación: los adverbios en `-mente` conservan el acento de su adjetivo base (`rápida` → `rápidamente` es esdrújula). El sufijo añade sílabas al final sin desplazar la tónica.
+
+### §4.6 Casos degenerados
+
+// [DECISIÓN] Palabra vacía o sin vocales: `tipo: "monosilabo"`, `silabaTonica: 0`, `tonica: null` (o la única sílaba si existe).
+// Justificación: no romper el pipeline; el caller decide si es un error.
+
+### §4.7 Fuera de alcance de `acento`
+
+- Acento diacrítico (`él`/`el`, `sí`/`si`, `más`/`mas`): no se distingue por contexto.
+- Acento enfático / interrogativo: fuera de alcance.
+- Sinalefa y cómputo métrico: `licencias` / `computo`.
+
+---
+
 ## §13 Contratos públicos (spike)
 
 // [DECISIÓN] Se declaran aquí los contratos de `normalizar` y `silabeo`. Los contratos de `acento`, `licencias`, `computo`, `Candidato` y `Eleccion` NO se definen todavía.
@@ -255,14 +314,30 @@ export function silabear(palabra: string): readonly Silaba[];
 ```
 
 ```ts
+// packages/motor/src/acento.ts — superficie pública
+export type TipoAcento = "aguda" | "llana" | "esdrujula" | "sobresdrujula" | "monosilabo";
+
+export interface ResultadoAcento {
+  readonly tipo: TipoAcento;
+  readonly silabaTonica: number;
+  readonly tonica: Silaba | null;
+  readonly silabas: readonly Silaba[];
+}
+
+export function clasificarAcento(palabra: string): ResultadoAcento;
+```
+
+```ts
 // packages/motor/src/index.ts — reexports de la fachada
 export type { ResultadoNormalizacion } from "./normalizar.js";
 export type { Silaba } from "./silabeo.js";
+export type { ResultadoAcento, TipoAcento } from "./acento.js";
 export { normalizar } from "./normalizar.js";
 export { silabear } from "./silabeo.js";
+export { clasificarAcento } from "./acento.js";
 ```
 
-// [DECISIÓN] `index.ts` reexporta `normalizar`, `silabear` y sus tipos, y nada más, hasta que existan los demás módulos.
+// [DECISIÓN] `index.ts` reexporta `normalizar`, `silabear`, `clasificarAcento` y sus tipos, y nada más, hasta que existan los demás módulos.
 // Justificación: la fachada pública no debe exponer símbolos no implementados.
 
 ---
@@ -307,3 +382,10 @@ export { silabear } from "./silabeo.js";
 | S-34  | §3.6    | `y` final = vocal cerrada                            | spike        |
 | S-35  | §3.6    | `y` interna = consonante                             | spike        |
 | S-36  | §3.7    | `güe/güi` diptongo                                   | spike        |
+| S-37  | §4.1    | firma `clasificarAcento(palabra) → ResultadoAcento`  | spike        |
+| S-38  | §4.1    | `ResultadoAcento` con `{ tipo, silabaTonica, tonica, silabas }` | spike |
+| S-39  | §4.2    | tilde explícita manda sobre regla general            | spike        |
+| S-40  | §4.3    | aguda si termina en vocal/n/s; llana en el resto     | spike        |
+| S-41  | §4.4    | monosílabos → tipo `monosilabo`                      | spike        |
+| S-42  | §4.5    | adverbios `-mente` → analizar base                   | spike        |
+| S-43  | §4.6    | palabra vacía/sin vocales → `monosilabo`             | spike        |
