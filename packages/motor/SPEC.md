@@ -111,12 +111,22 @@ El motor produce un **ejemplo de verso** (la escansión propuesta). Los **overri
 | ACE-02 | Con tilde: la tónica es la vocal con tilde. | `propuesta` |
 | ACE-03 | Sin tilde: si termina en vocal, *n* o *s*, es llana (acento en la penúltima sílaba). Si termina en otra consonante, es aguda. | `propuesta` |
 | ACE-04 | En un diptongo con vocal abierta, la tónica es la abierta. En *ui* e *iu*, la segunda vocal. | `propuesta` |
-| ACE-05 | Monosílabos átonos: se tratan como átonos los de la lista siguiente, buscados por su forma escrita con tilde (minúsculas): *el, la, lo, los, las, un, del, al*; *a, con, de, en, por, sin*; *y, e, o, u, ni, que, si*; *me, te, se, nos, os, le, les*; *mi, tu, su, mis, tus, sus* [+ *ha, he, has, han*, si los aceptas]. Todo monosílabo no listado, o con tilde diacrítica, es tónico. | `propuesta` |
+| ACE-05 | Monosílabos átonos: se tratan como átonos los de la lista siguiente, buscados por su forma escrita con tilde (minúsculas): *el, la, lo, los, las, un, del, al*; *a, con, de, en, por, sin*; *y, e, o, u, ni, que, si*; *me, te, se, nos, os, le, les*; *mi, tu, su, mis, tus, sus*; *ha, he, has, han*. Todo monosílabo no listado, o con tilde diacrítica, es tónico. | `propuesta` |
 | ACE-05b | Excepción: el monosílabo que cierra el verso es siempre tónico (COM-02b, RIT-02). | `propuesta` |
 | ACE-06 | Adverbios en *-mente*: [DC] no define su acentuación. Ver D6. | `pendiente` |
 | ACE-07 | Una palabra sobresdrújula se trata como aguda cuando se integra en el esquema del verso. [DC 4.3, p. 62] | `decidida` |
 | ACE-08 | El motor calcula **solo el acento normal**. Estos fenómenos cambian el acento por razones rítmicas, y por eso son overrides del usuario y nunca automáticos: desplazamiento (sístole y diástole), doble acentuación de polisílabos, acentuación de monosílabos y desacentuación de sílabas tónicas. [DC 5.1, pp. 75-77] | `decidida` |
 | ACE-09 | Clasificar cada acento dentro del verso como rítmico, extrarrítmico o antirrítmico es información opcional (v2). [DC 5.3, pp. 85-86] | `decidida` |
+
+### Notas sobre ACE-05 y ACE-05b
+
+**Lista cerrada.** La lista de ACE-05 incluye artículos (*el, la, lo, los, las, un*), la contracción *del* y el artículo indeterminado *al*; preposiciones (*a, con, de, en, por, sin*); conjunciones breves (*y, e, o, u, ni, que, si*); pronombres átonos (*me, te, se, nos, os, le, les*); posesivos antepuestos (*mi, tu, su, mis, tus, sus*); y los auxiliares del verbo *haber* (*ha, he, has, han*). Se asume la limitación conocida del motor de no desambiguar categorías gramaticales contextuales: la clasificación se hace por forma escrita, no por función sintáctica.
+
+**Tildes diacríticas (coherencia con NOR-01).** El filtrado de átonos/tónicos se realiza sobre la forma escrita que preserva la tilde diacrítica. Por tanto, formas como *él, mí, tú, sí, té, sé, dé, qué, más* conservan su condición tónica, diferenciándose de sus homógrafos átonos (*el, mi, tu, se, de, que*).
+
+**Excepción por posición (ACE-05b).** Todo monosílabo situado en la última posición del verso recupera o mantiene su condición tónica, independientemente de que pertenezca a la lista de átonos. Esto garantiza la compatibilidad con COM-02b (recuento de sílabas) y RIT-02 (acento rítmico en la penúltima sílaba métrica o final de verso).
+
+**Tratamiento de *como, cual, cuyo*.** Al no estar incluidos en la lista de átonos, se consolida como comportamiento por defecto que permanecen como tónicos, sin requerir apertura de nueva decisión teórica.
 
 ### Evidencia para ACE-08
 [NE1] cap. XI (sonetos tridecasílabos de Unamuno, pp. 151-168) documenta sistemáticamente acentos forzados para encajar el verso en el esquema del alejandrino a la francesa: *sin-vol-vér-la-vis-tà / queés-vol-vér-laa-la-muér-te* (¡Siémbrate!, v. 10); *vá-nas-i-lu-sio-nès / aun-por-ve-nír-mar-chá-mos* (Nihil novum sub sole, v. 9). Son casos de override del usuario, no de cálculo automático.
@@ -223,7 +233,7 @@ El fundamento teórico está en el cuadro de Jakobson (ver nota en ALC-04). El m
 | **D2** | Grupo *tl* (SIL-11) | *a-tlas* (frecuente en México) o *at-las* (frecuente en España). | Sin evidencia en [NE1]/[NE2]. |
 | **D3** | *h* intercalada (SIL-12) | ¿Impide el diptongo o se ignora? Verificar en RAE *Ortografía* 2010. | Sin evidencia en [NE1]/[NE2]. |
 | **D4** | Prefijos (SIL-13) | ¿Se silabea por morfología o solo por reglas fonéticas? | Sin evidencia en [NE1]/[NE2]. |
-| **D5** | Lista de monosílabos átonos (ACE-05) | **Cerrada (propuesta).** Lista en ACE-05: artículos, preposiciones, conjunciones breves, pronombres átonos, posesivos antepuestos, más *ha, he, has, han* (auxiliares) si se aceptan. Todo monosílabo no listado o con tilde diacrítica es tónico. ACE-05b: el monosílabo final del verso es siempre tónico. | Sin evidencia en [NE1]/[NE2]. |
+| **D5** | Lista de monosílabos átonos (ACE-05) | **Cerrada (propuesta).** Lista en ACE-05: artículos (*el, la, lo, los, las, un*), contracción *del*, artículo indeterminado *al*, preposiciones, conjunciones breves, pronombres átonos, posesivos antepuestos, y auxiliares *ha, he, has, han*. Todo monosílabo no listado o con tilde diacrítica es tónico (*como, cual, cuyo* quedan tónicos por defecto). ACE-05b: el monosílabo final del verso es siempre tónico. | Sin evidencia en [NE1]/[NE2]. |
 | **D6** | Adverbios en *-mente* (ACE-06) | Una o dos tónicas. Si *men* cuenta como tónica, afecta al ritmo y a la rima (*claramente* ~ *-ente*). [DC] no lo define. | Sin evidencia en [NE1]/[NE2]. |
 | **D7** | Sinalefa y vocal tónica final (LIC-03, LIC-10) | **Cerrada: no bloquear.** La sinalefa se aplica por defecto aunque la vocal final sea tónica o cerrada con tilde (*su último* → *su‿úl*). Las conjunciones *e, o, y* siguen LIC-03 (no sinalefa triple por defecto). | **[NE1] cap. IX (Urna votiva, pp. 136-137)** documenta sinalefas con vocal tónica sin problema. La evidencia apoya mantener LIC-01 y tratar D7 como override, no como bloqueo automático. |
 | **D8** | Orden de aplicación de las licencias | Primero silabeo, luego sinalefa, luego cómputo. Confirmar que no hay interacciones que obliguen a otro orden. | Sin evidencia en [NE1]/[NE2]. |
