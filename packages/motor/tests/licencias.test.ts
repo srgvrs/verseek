@@ -73,10 +73,18 @@ describe("detectarCandidatos", () => {
     expect(detectarCandidatos("sol")).toEqual([]);
   });
 
-  it("múltiples fronteras: 'era un ave' → varias sinalefas", () => {
+  it("una sola sinalefa en 'era un ave' (un termina en consonante)", () => {
     const cs = detectarCandidatos("era un ave");
     const sinalefas = cs.filter((c) => c.tipo === "sinalefa");
-    expect(sinalefas.length).toBeGreaterThanOrEqual(2);
+    expect(sinalefas.length).toBe(1);
+    expect(sinalefas[0]?.palabraA).toBe(0);
+    expect(sinalefas[0]?.palabraB).toBe(1);
+  });
+
+  it("múltiples fronteras: 'era una aurora' → dos sinalefas", () => {
+    const cs = detectarCandidatos("era una aurora");
+    const sinalefas = cs.filter((c) => c.tipo === "sinalefa");
+    expect(sinalefas.length).toBe(2);
   });
 
   it("hiato bloqueado por cerrada tónica: 'la ía' no ofrece sinalefa", () => {
