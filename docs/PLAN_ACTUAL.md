@@ -15,7 +15,7 @@
 
 Total: **112 tests en verde** (8 archivos).
 
-## Fase 2 del motor: cerrada
+## Fase 2 del motor: ✅ COMPLETADA
 
 Con `computo.ts` en verde se cierra la fase 2 del `ARCHITECTURE.md` §13
 (motor sin interfaz). El pipeline completo funciona:
@@ -24,7 +24,9 @@ Con `computo.ts` en verde se cierra la fase 2 del `ARCHITECTURE.md` §13
 normalizar → silabeo → acento → licencias → escansion → computo
 ```
 
-## Siguiente paso: fase 3 — editor web con análisis en vivo
+Estado: **112 tests en verde** (8 archivos). Fase 2 cerrada oficialmente.
+
+## Siguiente sesión: Fase 3 (Editor Web)
 
 Hito: editor CodeMirror 6 + Web Worker que muestre, mientras se escribe:
 
