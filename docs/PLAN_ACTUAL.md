@@ -26,7 +26,25 @@ normalizar → silabeo → acento → licencias → escansion → computo
 
 Estado: **112 tests en verde** (8 archivos). Fase 2 cerrada oficialmente.
 
-## Siguiente sesión: Fase 3 (Editor Web)
+## Fase 3 (Editor Web): infraestructura base ✅ COMPLETADA
+
+Primer paso de la Fase 3 cerrado. Ya está en pie el andamiaje del editor:
+
+- **Dependencias**: `codemirror`, `@codemirror/view`, `@codemirror/state` y
+  `@codemirror/language` instaladas en `apps/web`.
+- **Web Worker esqueleto** (`apps/web/src/worker/analisis.worker.ts`):
+  escucha mensajes `{ tipo: "analizar", versos }` y responde con un mock
+  `{ tipo: "resultado", versos: [] }`. Todavía no importa `@verseek/motor`.
+- **Editor básico** (`apps/web/src/editor.ts`): `EditorView` de CodeMirror 6
+  a pantalla completa, con `basicSetup` y `lineWrapping`. Sin decoraciones.
+- **Montaje** (`apps/web/src/main.ts` + `apps/web/index.html`): el editor se
+  monta en `<div id="app">` y se ve funcionando en el navegador.
+
+Pendiente para cerrar la Fase 3: conectar el Worker con `@verseek/motor`,
+añadir debounce, decoraciones por verso/sílaba y el `Map` de elecciones en
+`estado.ts`.
+
+## Siguiente sesión: Fase 3 (Editor Web) — pipeline real
 
 Hito: editor CodeMirror 6 + Web Worker que muestre, mientras se escribe:
 
