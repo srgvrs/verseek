@@ -430,6 +430,62 @@ export function resolverEscansion(
 
 ---
 
+## §7 Cómputo (spike)
+
+Contexto del `SPEC.md` real: §7 (cómputo) aún no tiene IDs asignados. Aquí
+se concretan las decisiones mínimas para poder implementar `computo.ts`.
+
+### §7.1 Firma y resultado
+
+```ts
+export interface Computo {
+  readonly silabasMetricas: number;
+  readonly ajuste: -1 | 0 | 1;
+  readonly tipoFinal: TipoAcento;
+}
+
+export function computar(escansion: Escansion, verso: string): Computo;
+```
+
+// [DECISIÓN] La firma es `computar(escansion, verso) → Computo`. Función pura.
+// Justificación: `computo` necesita la escansión ya resuelta (con sus licencias aplicadas) y el texto del verso para localizar la última palabra.
+
+// [DECISIÓN] `Computo` expone `silabasMetricas` (final), `ajuste` (−1/0/+1) y `tipoFinal` (clasificación acentual de la última palabra).
+// Justificación: la UI necesita mostrar el ajuste aplicado y el tipo final; el motor no debe ocultar la ley de acento final.
+
+### §7.2 Punto de partida
+
+// [DECISIÓN] Se parte de `escansion.silabasMetricas` (ya resuelta por `resolverEscansion`) y se le suma el ajuste por acento final.
+// Justificación: `escansion` ya contabilizó las licencias elegidas; recalcular desde cero duplicaría trabajo y podría divergir.
+
+### §7.3 Última palabra
+
+// [DECISIÓN] La última palabra del verso es la última secuencia de letras (`\p{L}`) del texto. La puntuación final se ignora.
+// Justificación: la ley de acento final depende de la última palabra léxica, no de los signos que la siguen.
+
+### §7.4 Ley de acento final
+
+// [DECISIÓN] Ajuste: aguda `+1`, esdrújula `−1`, sobresdrújula `−1`, llana `0`.
+// Justificación: regla estándar de métrica española.
+
+### §7.5 Monosílabo final
+
+// [DECISIÓN] Si la última palabra es monosílaba, `ajuste = 0`.
+// Justificación: los monosílabos no se ajustan por acento final en métrica.
+
+### §7.6 Verso vacío
+
+// [DECISIÓN] Verso vacío (o sin letras) → `{ silabasMetricas: 0, ajuste: 0, tipoFinal: "monosilabo" }`.
+// Justificación: no romper el pipeline; el caller decide si es un error.
+
+### §7.7 Fuera de alcance de `computo`
+
+- Licencias (sinalefa, hiato, sinéresis, diéresis): `licencias` / `escansion`.
+- Patrón de acentos y ritmo: `ritmo` (fase 6).
+- Rima: `rima` (fase 6).
+
+---
+
 ## §13 Contratos públicos (spike)
 
 // [DECISIÓN] Se declaran aquí los contratos de `normalizar` y `silabeo`. Los contratos de `acento`, `licencias`, `computo`, `Candidato` y `Eleccion` NO se definen todavía.
@@ -510,20 +566,33 @@ export function resolverEscansion(
 ```
 
 ```ts
+// packages/motor/src/computo.ts — superficie pública
+export interface Computo {
+  readonly silabasMetricas: number;
+  readonly ajuste: -1 | 0 | 1;
+  readonly tipoFinal: TipoAcento;
+}
+
+export function computar(escansion: Escansion, verso: string): Computo;
+```
+
+```ts
 // packages/motor/src/index.ts — reexports de la fachada
 export type { ResultadoNormalizacion } from "./normalizar.js";
 export type { Silaba } from "./silabeo.js";
 export type { ResultadoAcento, TipoAcento } from "./acento.js";
 export type { Candidato, TipoLicencia } from "./licencias.js";
 export type { Eleccion, Escansion } from "./escansion.js";
+export type { Computo } from "./computo.js";
 export { normalizar } from "./normalizar.js";
 export { silabear } from "./silabeo.js";
 export { clasificarAcento } from "./acento.js";
 export { detectarCandidatos } from "./licencias.js";
 export { resolverEscansion } from "./escansion.js";
+export { computar } from "./computo.js";
 ```
 
-// [DECISIÓN] `index.ts` reexporta `normalizar`, `silabear`, `clasificarAcento`, `detectarCandidatos`, `resolverEscansion` y sus tipos, y nada más, hasta que existan los demás módulos.
+// [DECISIÓN] `index.ts` reexporta `normalizar`, `silabear`, `clasificarAcento`, `detectarCandidatos`, `resolverEscansion`, `computar` y sus tipos, y nada más, hasta que existan los demás módulos.
 // Justificación: la fachada pública no debe exponer símbolos no implementados.
 
 ---
@@ -592,3 +661,10 @@ export { resolverEscansion } from "./escansion.js";
 | S-58  | §6.3    | elección huérfana → se reporta, no se aplica         | spike        |
 | S-59  | §6.4    | sinalefa e hiato excluyentes; gana la última         | spike        |
 | S-60  | §6.5    | sinéresis/diéresis se suman a sinalefa/hiato         | spike        |
+| S-61  | §7.1    | firma `computar(escansion, verso) → Computo`         | spike        |
+| S-62  | §7.1    | `Computo` con `{ silabasMetricas, ajuste, tipoFinal }` | spike      |
+| S-63  | §7.2    | parte de `escansion.silabasMetricas`                 | spike        |
+| S-64  | §7.3    | última palabra = última secuencia de letras          | spike        |
+| S-65  | §7.4    | aguda +1, esdrújula/sobresdrújula −1, llana 0        | spike        |
+| S-66  | §7.5    | monosílabo final → sin ajuste                        | spike        |
+| S-67  | §7.6    | verso vacío → cómputo 0                              | spike        |

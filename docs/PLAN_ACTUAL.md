@@ -9,58 +9,53 @@
 | `acento.ts` | ✅ Implementado (§4, S-37…S-43) | 16 |
 | `licencias.ts` | ✅ Implementado (§5, S-44…S-53) | 15 |
 | `escansion.ts` | ✅ Implementado (§6, S-54…S-60) | 10 |
-| `computo.ts` | ❌ Pendiente | — |
+| `computo.ts` | ✅ Implementado (§7, S-61…S-67) | 8 |
 | `ritmo.ts` | ❌ Fuera de alcance (fase 6) | — |
 | `rima.ts` | ❌ Fuera de alcance (fase 6) | — |
 
-Total: **78 tests en verde** (5 archivos).
+Total: **86 tests en verde** (6 archivos).
 
-## Siguiente paso: `computo.ts`
+## Fase 2 del motor: cerrada
 
-Pipeline según `ARCHITECTURE.md` §4–§5:
+Con `computo.ts` en verde se cierra la fase 2 del `ARCHITECTURE.md` §13
+(motor sin interfaz). El pipeline completo funciona:
 
 ```
-licencias (candidatos) → elecciones del usuario → escansión resuelta → cómputo
+normalizar → silabeo → acento → licencias → escansion → computo
 ```
 
-`escansion.ts` ya resuelve candidatos + elecciones en una `Escansion` con
-`silabasMetricas`. Falta aplicar la **ley de acento final** sobre esa
-escansión para obtener el cómputo métrico definitivo del verso.
+## Siguiente paso: fase 3 — editor web con análisis en vivo
+
+Hito: editor CodeMirror 6 + Web Worker que muestre, mientras se escribe:
+
+- sílabas separadas por verso;
+- número de sílabas métricas al final de cada verso;
+- tónica resaltada;
+- candidatos de licencia clicables (sinalefa / hiato / sinéresis / diéresis);
+- elecciones del usuario persistidas en memoria (IndexedDB en fase 4).
 
 ### Alcance propuesto
 
-1. **Firma** (a decidir en `SPEC.propuesta.md` §7, S-61…):
+1. **Worker** (`apps/web/src/worker/analisis.worker.ts`):
+   - recibe `{ verso: string, elecciones: Eleccion[] }`;
+   - devuelve `{ escansion: Escansion, computo: Computo }`;
+   - usa `@verseek/motor` (import desde el paquete).
 
-   ```ts
-   export interface Computo {
-     readonly silabasMetricas: number;
-     readonly ajuste: -1 | 0 | 1;
-     readonly tipoFinal: TipoAcento;
-   }
+2. **Editor** (`apps/web/src/editor.ts`):
+   - CodeMirror 6 con `EditorView`;
+   - debounce de ~300 ms;
+   - decoraciones por verso (número de sílabas al final);
+   - decoraciones por sílaba (tónica resaltada).
 
-   export function computar(escansion: Escansion, verso: string): Computo;
-   ```
+3. **Estado** (`apps/web/src/estado.ts`):
+   - `Map<versoId, Eleccion[]>` en memoria;
+   - recálculo solo del verso modificado.
 
-2. **Reglas a decidir** (bloques `[DECISIÓN]` nuevos, S-61…):
-   - ¿Cómo se determina la última palabra del verso? (última secuencia de
-     letras).
-   - ¿Qué pasa si la última palabra es monosílaba? (no ajusta).
-   - ¿Qué pasa si el verso está vacío? (cómputo 0).
-   - ¿Se aplica el ajuste sobre `silabasMetricas` de la escansión o se
-     recalcula desde cero?
+### Después de la fase 3
 
-3. **Tests** (`packages/motor/tests/computo.test.ts`):
-   - verso llano → sin ajuste;
-   - verso agudo → +1;
-   - verso esdrújulo → −1;
-   - verso vacío → 0;
-   - verso con sinalefa aplicada + final agudo → ajuste combinado.
-
-### Después de `computo.ts`
-
-Con `computo.ts` en verde se cierra la fase 2 del `ARCHITECTURE.md` §13
-(motor sin interfaz). El siguiente hito es la fase 3: editor web con análisis
-en vivo (CodeMirror 6 + Web Worker).
+Fase 4: elecciones del usuario con anclaje robusto (offset+contexto) y
+persistencia en IndexedDB. Fase 5: empaquetado con Capacitor. Fase 6: rima y
+ritmo.
 
 ## Fuera de alcance de esta fase
 

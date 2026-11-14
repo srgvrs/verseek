@@ -45,3 +45,12 @@
   diéresis, idempotencia).
 - `SPEC.propuesta.md` §6 (S-54…S-60) y contratos públicos actualizados.
 - `index.ts` reexporta `resolverEscansion`, `Eleccion` y `Escansion`.
+
+### Added (computo)
+- `packages/motor/src/computo.ts`: `computar(escansion, verso)` aplica la ley
+  de acento final sobre `escansion.silabasMetricas`. Aguda +1, esdrújula y
+  sobresdrújula −1, llana 0. Monosílabo final sin ajuste. Verso vacío → 0.
+- `packages/motor/tests/computo.test.ts`: 8 tests (vacío, llana, aguda,
+  esdrújula, monosílabo, sinalefa + llana, sinalefa + aguda, puntuación final).
+- `SPEC.propuesta.md` §7 (S-61…S-67) y contratos públicos actualizados.
+- `index.ts` reexporta `computar` y `Computo`.
