@@ -9,11 +9,12 @@
 | `acento.ts` | ✅ Implementado (§4, S-37…S-43) | 16 |
 | `licencias.ts` | ✅ Implementado (§5, S-44…S-53) | 15 |
 | `escansion.ts` | ✅ Implementado (§6, S-54…S-60) | 10 |
-| `computo.ts` | ✅ Implementado (§7, S-61…S-67) | 8 |
+| `computo.ts` | ✅ Implementado (§7, S-61…S-67, COM-02b) | 10 |
 | `ritmo.ts` | ✅ Implementado (experimental) | 13 |
 | `rima.ts` | ❌ Fuera de alcance (fase 6) | — |
 
-Total: **112 tests en verde** (8 archivos).
+Total: **137 tests en verde** (9 archivos), incluido el corpus de oro
+(`tests/corpus.test.ts`, 21 versos).
 
 ## Fase 2 del motor: ✅ COMPLETADA
 
@@ -24,7 +25,27 @@ Con `computo.ts` en verde se cierra la fase 2 del `ARCHITECTURE.md` §13
 normalizar → silabeo → acento → licencias → escansion → computo
 ```
 
-Estado: **112 tests en verde** (8 archivos). Fase 2 cerrada oficialmente.
+Estado: **137 tests en verde** (9 archivos). Fase 2 cerrada oficialmente.
+
+### Corpus de oro: inicial en verde, ampliación pendiente
+
+`tests/corpus/versos.json` arranca con **21 versos** verificados a mano
+(Martí, *Versos sencillos* I y III; Machado, *Proverbios y cantares* XXIX;
+un caso de Domínguez Caparrós con sinéresis). Todos pasan.
+
+Pendiente para cerrar el corpus:
+
+- Ampliar con los casos de prueba del `SPEC.md` §11 que aún no están
+  (sinalefa triple, hiato con override, *süave* / *rüido* / *cruel*,
+  *Urna votiva*, acentos forzados de Unamuno, versificación de cláusulas,
+  tmesis, polivalencia *ui/iu*).
+- Añadir casos de rima cuando `rima.ts` entre en alcance (fase 6).
+- Revisar la categoría de cada verso y documentar la fuente de cada
+  escansión.
+
+Nota: las `elecciones` del corpus son solo objetos `Eleccion`; la
+información de ajustes automáticos (aguda +1, monosílabo) vive en
+`categoria`, no en `elecciones`.
 
 ## Fase 3 (Editor Web): infraestructura base ✅ COMPLETADA
 
@@ -44,7 +65,12 @@ Pendiente para cerrar la Fase 3: conectar el Worker con `@verseek/motor`,
 añadir debounce, decoraciones por verso/sílaba y el `Map` de elecciones en
 `estado.ts`.
 
-## Siguiente sesión: Fase 3 (Editor Web) — pipeline real
+## Siguiente sesión: ampliar corpus y Fase 3 (Editor Web)
+
+Antes de la Fase 3, ampliar el corpus de oro con los casos del `SPEC.md` §11
+que faltan (ver arriba). Después, la Fase 3:
+
+## Fase 3 (Editor Web) — pipeline real
 
 Hito: editor CodeMirror 6 + Web Worker que muestre, mientras se escribe:
 
