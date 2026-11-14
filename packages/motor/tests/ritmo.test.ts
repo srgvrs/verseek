@@ -154,6 +154,46 @@ describe("analizarRitmo", () => {
     },
   );
 
+  it("OVR-05: sinéresis en 'Faetón' → fae-tón, tónica en la 2", () => {
+    const esc = resolverEscansion("Faetón", [
+      { tipo: "sineresis", palabraA: 0, palabraB: 0, valor: "aplicar" },
+    ]);
+    const r = analizarRitmo(esc, "Faetón");
+    // Sin sinéresis: Fa-e-tón (3 sílabas). Con sinéresis: Fae-tón (2).
+    expect(esc.silabasMetricas).toBe(2);
+    expect(r.posicionesTonicas).toEqual([2]);
+  });
+
+  it("OVR-05: diéresis en 'fluir' → flu-ir, tónica en la 2", () => {
+    const esc = resolverEscansion("fluir", [
+      { tipo: "dieresis", palabraA: 0, palabraB: 0, valor: "aplicar" },
+    ]);
+    const r = analizarRitmo(esc, "fluir");
+    // Sin diéresis: fluir (1 sílaba). Con diéresis: flu-ir (2).
+    expect(esc.silabasMetricas).toBe(2);
+    expect(r.posicionesTonicas).toEqual([2]);
+  });
+
+  it("OVR-05: diéresis en 'süave' → sü-a-ve, tónica en la 2", () => {
+    const esc = resolverEscansion("süave", [
+      { tipo: "dieresis", palabraA: 0, palabraB: 0, valor: "aplicar" },
+    ]);
+    const r = analizarRitmo(esc, "süave");
+    // Sin diéresis: süa-ve (2 sílabas). Con diéresis: sü-a-ve (3).
+    expect(esc.silabasMetricas).toBe(3);
+    expect(r.posicionesTonicas).toEqual([2]);
+  });
+
+  it("OVR-05: sinéresis en 'aérea' → aé-rea, tónica en la 2", () => {
+    const esc = resolverEscansion("aérea", [
+      { tipo: "sineresis", palabraA: 0, palabraB: 0, valor: "aplicar" },
+    ]);
+    const r = analizarRitmo(esc, "aérea");
+    // Sin sinéresis: a-é-re-a (4 sílabas). Con sinéresis en re-a: a-é-rea (3).
+    expect(esc.silabasMetricas).toBe(3);
+    expect(r.posicionesTonicas).toEqual([2]);
+  });
+
   it("coherencia: cada T de patron aparece en posicionesTonicas", () => {
     const casos = [
       "la aurora",

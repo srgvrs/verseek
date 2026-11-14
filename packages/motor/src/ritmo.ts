@@ -19,7 +19,7 @@
 
 import { clasificarAcento, esAtono } from "./acento.js";
 import type { Escansion } from "./escansion.js";
-import { silabear } from "./silabeo.js";
+import { silabear, type Silaba } from "./silabeo.js";
 
 export type EtiquetaRitmo =
   | "yambico"
@@ -67,10 +67,153 @@ function ajusteFinal(verso: string): number {
   return 0;
 }
 
+const VOCALES_ABIERTAS = new Set(["a", "e", "o", "á", "é", "ó"]);
+const VOCALES_CERRADAS = new Set(["i", "u", "ü", "í", "ú"]);
+const VOCALES_TILDADAS = new Set(["á", "é", "í", "ó", "ú"]);
+
+function esVocal(c: string): boolean {
+  const l = c.toLowerCase();
+  return VOCALES_ABIERTAS.has(l) || VOCALES_CERRADAS.has(l);
+}
+
+function esAbierta(c: string): boolean {
+  return VOCALES_ABIERTAS.has(c.toLowerCase());
+}
+
+function esCerrada(c: string): boolean {
+  return VOCALES_CERRADAS.has(c.toLowerCase());
+}
+
+function esTildada(c: string): boolean {
+  return VOCALES_TILDADAS.has(c.toLowerCase());
+}
+
+/**
+ * §OVR-05: índice (dentro de `silaba.texto`) de la vocal tónica de una
+ * sílaba tónica. Prioridad: vocal con tilde; si no, la abierta; si no,
+ * la segunda de `ui/iu` (ACE-04); si no, la primera vocal.
+ */
+function indiceVocalTonicaEnSilaba(texto: string): number {
+  const chars = Array.from(texto);
+  for (let i = 0; i < chars.length; i++) {
+    const c = chars[i];
+    if (c !== undefined && esTildada(c)) return i;
+  }
+  for (let i = 0; i < chars.length; i++) {
+    const c = chars[i];
+    if (c !== undefined && esAbierta(c)) return i;
+  }
+  // ui / iu: la segunda vocal.
+  const vocales: number[] = [];
+  for (let i = 0; i < chars.length; i++) {
+    const c = chars[i];
+    if (c !== undefined && esVocal(c)) vocales.push(i);
+  }
+  if (vocales.length >= 2) return vocales[1] as number;
+  if (vocales.length === 1) return vocales[0] as number;
+  return 0;
+}
+
+/**
+ * §OVR-05: aplica sinéresis a una palabra. Fusiona el ÚLTIMO par de
+ * sílabas contiguas separadas por hiato (dos vocales en contacto, sin
+ * consonante entre ellas). Devuelve los grupos de índices planos
+ * (relativos a `inicio`) que forman cada unidad de la palabra.
+ *
+ * Si no hay par de sílabas en hiato, devuelve la agrupación por defecto
+ * (una unidad por sílaba).
+ */
+function agruparConSineresis(
+  silabas: readonly Silaba[],
+  inicio: number,
+): number[][] {
+  const grupos: number[][] = silabas.map((_, i) => [inicio + i]);
+  for (let k = silabas.length - 2; k >= 0; k--) {
+    const a = silabas[k];
+    const b = silabas[k + 1];
+    if (a === undefined || b === undefined) continue;
+    const ultimoA = a.texto[a.texto.length - 1] ?? "";
+    const primeroB = b.texto[0] ?? "";
+    if (esVocal(ultimoA) && esVocal(primeroB)) {
+      // Fusionar k y k+1 en una sola unidad.
+      const fusion = [...(grupos[k] as number[]), ...(grupos[k + 1] as number[])];
+      grupos.splice(k, 2, fusion);
+      return grupos;
+    }
+  }
+  return grupos;
+}
+
+/**
+ * §OVR-05: aplica diéresis a una palabra. Divide el PRIMER diptongo en
+ * dos unidades. La tónica va a la mitad que contiene la vocal tónica de
+ * la palabra (según `clasificarAcento`).
+ *
+ * Si no hay diptongo, devuelve la agrupación por defecto.
+ */
+function agruparConDieresis(
+  palabra: string,
+  silabas: readonly Silaba[],
+  inicio: number,
+): number[][] {
+  const { silabaTonica } = clasificarAcento(palabra);
+
+  for (let k = 0; k < silabas.length; k++) {
+    const s = silabas[k];
+    if (s === undefined) continue;
+    const chars = Array.from(s.texto);
+    // Buscar el primer par de vocales contiguas que formen diptongo.
+    for (let i = 0; i < chars.length - 1; i++) {
+      const c1 = chars[i];
+      const c2 = chars[i + 1];
+      if (c1 === undefined || c2 === undefined) continue;
+      if (!esVocal(c1) || !esVocal(c2)) continue;
+      // Diptongo: al menos una cerrada, y ninguna cerrada tónica.
+      const c1Ab = esAbierta(c1);
+      const c2Ab = esAbierta(c2);
+      if (c1Ab && c2Ab) continue;
+      if (esTildada(c1) && esCerrada(c1)) continue;
+      if (esTildada(c2) && esCerrada(c2)) continue;
+
+      // Dividir la sílaba k en dos unidades: [inicio+k] y [inicio+k] (misma
+      // sílaba plana, pero dos unidades métricas). La tónica va a la mitad
+      // que contiene la vocal tónica de la palabra.
+      const idxTonica = indiceVocalTonicaEnSilaba(s.texto);
+      const tonicaEnPrimeraMitad = idxTonica <= i;
+
+      const grupos: number[][] = [];
+      for (let j = 0; j < silabas.length; j++) {
+        if (j === k) {
+          // Dos unidades para esta sílaba. Ambas apuntan al mismo índice
+          // plano; la tónica se marca en `tonicasPorSilaba` por sílaba, así
+          // que la mitad no tónica debe quedar como átona. Para lograrlo,
+          // devolvemos el índice plano en la mitad tónica y un índice
+          // "fantasma" negativo en la otra mitad (nunca tónico).
+          const idxPlano = inicio + k;
+          if (tonicaEnPrimeraMitad) {
+            grupos.push([idxPlano]);
+            grupos.push([-1]);
+          } else {
+            grupos.push([-1]);
+            grupos.push([idxPlano]);
+          }
+        } else {
+          grupos.push([inicio + j]);
+        }
+      }
+      return grupos;
+    }
+  }
+  return silabas.map((_, i) => [inicio + i]);
+}
+
 /**
  * Construye las unidades métricas del verso: cada unidad es un grupo de
  * índices de sílaba plana (0-based, sobre la concatenación de `silabear`
  * por palabra) que cuentan como UNA sola sílaba métrica.
+ *
+ * §OVR-05: antes de las fusiones por sinalefa, se aplican sinéresis y
+ * diéresis intra-palabra según `esc.eleccionesAplicadas`.
  *
  * §8.4: cada frontera `{palabraA, palabraB}` en `esc.fronterasSinalefa`
  * fusiona la última sílaba de A con la primera de B. Las fusiones pueden
@@ -89,12 +232,24 @@ export function unidadesMetricas(
   // Índice plano de la primera sílaba de cada palabra y total de sílabas.
   const inicioPalabra: number[] = [];
   const silabasPorPalabra: number[] = [];
+  const silabasDePalabra: Silaba[][] = [];
   let total = 0;
   for (const p of palabras) {
     inicioPalabra.push(total);
-    const n = silabear(p).length;
-    silabasPorPalabra.push(n);
-    total += n;
+    const ss = [...silabear(p)];
+    silabasPorPalabra.push(ss.length);
+    silabasDePalabra.push(ss);
+    total += ss.length;
+  }
+
+  // §OVR-05: índice de elecciones intra-palabra por palabra.
+  const sineresisEn = new Set<number>();
+  const dieresisEn = new Set<number>();
+  for (const e of escansion.eleccionesAplicadas) {
+    if (e.valor !== "aplicar") continue;
+    if (e.palabraA !== e.palabraB) continue;
+    if (e.tipo === "sineresis") sineresisEn.add(e.palabraA);
+    else if (e.tipo === "dieresis") dieresisEn.add(e.palabraA);
   }
 
   // Union-find sobre índices de sílaba plana.
@@ -132,23 +287,85 @@ export function unidadesMetricas(
     unir(idxA, idxB);
   }
 
-  // Agrupar por raíz, preservando el orden de aparición.
+  // §OVR-05: agrupar por palabra, aplicando sinéresis/diéresis intra-palabra
+  // ANTES de las fusiones por sinalefa (que ya están en el union-find).
+  const unidades: number[][] = [];
+  for (let w = 0; w < palabras.length; w++) {
+    const p = palabras[w];
+    const inicio = inicioPalabra[w];
+    const ss = silabasDePalabra[w];
+    if (p === undefined || inicio === undefined || ss === undefined) continue;
+
+    let gruposPalabra: number[][];
+    if (dieresisEn.has(w)) {
+      gruposPalabra = agruparConDieresis(p, ss, inicio);
+    } else if (sineresisEn.has(w)) {
+      gruposPalabra = agruparConSineresis(ss, inicio);
+    } else {
+      gruposPalabra = ss.map((_, i) => [inicio + i]);
+    }
+
+    for (const g of gruposPalabra) {
+      // Fusionar con las raíces del union-find (sinalefa).
+      const raices = new Set<number>();
+      for (const idx of g) {
+        if (idx < 0) continue;
+        raices.add(encontrar(idx));
+      }
+      if (raices.size === 0) {
+        // Unidad fantasma (mitad átona de una diéresis): índice negativo.
+        unidades.push(g);
+        continue;
+      }
+      // Unir todas las raíces del grupo (por si la sinalefa las separó).
+      const arr = [...raices];
+      const primera = arr[0] as number;
+      for (let i = 1; i < arr.length; i++) {
+        unir(primera, arr[i] as number);
+      }
+      unidades.push(g);
+    }
+  }
+
+  // Reagrupar por raíz final, preservando el orden de aparición de las
+  // unidades (no de los índices planos), para respetar el orden de las
+  // mitades de diéresis.
   const grupos = new Map<number, number[]>();
   const orden: number[] = [];
-  for (let i = 0; i < total; i++) {
-    const r = encontrar(i);
-    let g = grupos.get(r);
-    if (g === undefined) {
-      g = [];
-      grupos.set(r, g);
-      orden.push(r);
+  const resultado: number[][] = [];
+  for (const g of unidades) {
+    const raices = new Set<number>();
+    for (const idx of g) {
+      if (idx < 0) continue;
+      raices.add(encontrar(idx));
     }
-    g.push(i);
+    if (raices.size === 0) {
+      resultado.push(g);
+      continue;
+    }
+    const r = [...raices][0] as number;
+    let acc = grupos.get(r);
+    if (acc === undefined) {
+      acc = [];
+      grupos.set(r, acc);
+      orden.push(r);
+      resultado.push(acc);
+    }
+    for (const idx of g) acc.push(idx);
   }
-  return orden.map((r) => grupos.get(r) as number[]);
+  return resultado;
 }
 
-/** Tónicas por sílaba plana (mismo criterio que `construirPatron`). */
+/**
+ * Tónicas por sílaba plana (mismo criterio que `construirPatron`).
+ *
+ * §OVR-05: si la palabra lleva diéresis, la sílaba dividida produce dos
+ * unidades; la tónica va a la mitad que contiene la vocal tónica. Se
+ * devuelve un array paralelo al de sílabas planas, pero con la sílaba
+ * dividida marcada como tónica (la mitad átona se representa con índice
+ * negativo en `unidadesMetricas`, así que aquí basta con marcar la sílaba
+ * plana como tónica).
+ */
 function tonicasPorSilaba(verso: string): boolean[] {
   const palabras = partirPalabras(verso);
   const out: boolean[] = [];
@@ -184,7 +401,7 @@ function construirPatron(escansion: Escansion, verso: string): ("T" | "a")[] {
 
   const patron: ("T" | "a")[] = [];
   for (const u of unidades) {
-    const esTonica = u.some((i) => tonicas[i] === true);
+    const esTonica = u.some((i) => i >= 0 && tonicas[i] === true);
     patron.push(esTonica ? "T" : "a");
   }
 
@@ -212,7 +429,7 @@ function posicionesTonicas(
   for (let u = 0; u < unidades.length; u++) {
     const grupo = unidades[u];
     if (grupo === undefined) continue;
-    if (grupo.some((i) => tonicas[i] === true)) posiciones.push(u + 1);
+    if (grupo.some((i) => i >= 0 && tonicas[i] === true)) posiciones.push(u + 1);
   }
   return posiciones;
 }
