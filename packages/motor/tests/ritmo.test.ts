@@ -44,7 +44,9 @@ describe("analizarRitmo", () => {
   });
 
   it("'la aurora' sin sinalefa: tónicas en 1 y 3 → trocaico", () => {
-    const esc = resolverEscansion("la aurora", []);
+    const esc = resolverEscansion("la aurora", [
+      { tipo: "sinalefa", palabraA: 0, palabraB: 1, valor: "no-aplicar" },
+    ]);
     const r = analizarRitmo(esc, "la aurora");
     // la(T) au-ro-ra(T en ro) → T-a-T-a
     expect(r.patron).toEqual(["T", "a", "T", "a"]);

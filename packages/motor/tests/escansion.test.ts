@@ -16,10 +16,10 @@ describe("resolverEscansion", () => {
     expect(r.silabasMetricas).toBe(1);
   });
 
-  it("sin elecciones: baseline = silabeo plano (no aplica sinalefa)", () => {
+  it("sin elecciones: sinalefa por defecto (LIC-01)", () => {
     const r = resolverEscansion("la aurora", []);
-    // la + au-ro-ra = 4 sílabas
-    expect(r.silabasMetricas).toBe(4);
+    // la‿au-ro-ra = 3 sílabas con sinalefa
+    expect(r.silabasMetricas).toBe(3);
     expect(r.eleccionesAplicadas).toEqual([]);
   });
 
@@ -56,7 +56,7 @@ describe("resolverEscansion", () => {
       valor: "aplicar",
     };
     const r = resolverEscansion("la aurora", [e]);
-    expect(r.silabasMetricas).toBe(4);
+    expect(r.silabasMetricas).toBe(3); // antes 4: la sinalefa por defecto sí se aplica
     expect(r.eleccionesAplicadas).toEqual([]);
     expect(r.eleccionesHuerfanas).toEqual([e]);
   });
