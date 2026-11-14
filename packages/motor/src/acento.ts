@@ -31,6 +31,39 @@ export interface ResultadoAcento {
 
 const VOCALES_TILDADAS = new Set(["á", "é", "í", "ó", "ú", "Á", "É", "Í", "Ó", "Ú"]);
 
+/**
+ * §ACE-05: lista cerrada de monosílabos átonos, en minúsculas y con tilde
+ * diacrítica cuando corresponde. Se compara contra la forma escrita en
+ * minúsculas, de modo que las formas con tilde diacrítica (*él, mí, tú, sí,
+ * té, sé, dé, qué, más*) NO están aquí y quedan como tónicas.
+ */
+const MONOSILABOS_ATONOS = new Set<string>([
+  // Artículos definidos, indeterminado y contracciones.
+  "el", "la", "lo", "los", "las", "un", "del", "al",
+  // Preposiciones.
+  "a", "con", "de", "en", "por", "sin",
+  // Conjunciones breves.
+  "y", "e", "o", "u", "ni", "que", "si",
+  // Pronombres átonos.
+  "me", "te", "se", "nos", "os", "le", "les",
+  // Posesivos antepuestos.
+  "mi", "tu", "su", "mis", "tus", "sus",
+  // Auxiliares de "haber".
+  "ha", "he", "has", "han",
+]);
+
+/**
+ * §ACE-05: ¿es un monosílabo átono según la lista cerrada?
+ *
+ * Se normaliza a minúsculas conservando las tildes (NOR-01), de modo que
+ * *Él* → *él* no está en la lista y devuelve `false`. Todo lo no listado
+ * (incluidos polisílabos y monosílabos tónicos) devuelve `false`.
+ */
+export function esAtono(palabra: string): boolean {
+  if (palabra.length === 0) return false;
+  return MONOSILABOS_ATONOS.has(palabra.toLowerCase());
+}
+
 function tieneTilde(texto: string): boolean {
   for (const c of texto) {
     if (VOCALES_TILDADAS.has(c)) return true;

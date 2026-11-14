@@ -17,7 +17,7 @@
  *    y nunca se presenta como verdad.
  */
 
-import { clasificarAcento } from "./acento.js";
+import { clasificarAcento, esAtono } from "./acento.js";
 import type { Escansion } from "./escansion.js";
 import { silabear } from "./silabeo.js";
 
@@ -152,11 +152,18 @@ export function unidadesMetricas(
 function tonicasPorSilaba(verso: string): boolean[] {
   const palabras = partirPalabras(verso);
   const out: boolean[] = [];
-  for (const p of palabras) {
+  const ultima = palabras.length - 1;
+  for (let w = 0; w < palabras.length; w++) {
+    const p = palabras[w];
+    if (p === undefined) continue;
     const silabas = silabear(p);
+    // §ACE-05: monosílabos átonos de la lista cerrada no llevan tónica.
+    // §ACE-05b: la última palabra del verso es siempre tónica, aunque sea
+    // un monosílabo de la lista.
+    const atono = w !== ultima && esAtono(p);
     const { silabaTonica } = clasificarAcento(p);
     for (let i = 0; i < silabas.length; i++) {
-      out.push(i === silabaTonica);
+      out.push(!atono && i === silabaTonica);
     }
   }
   return out;

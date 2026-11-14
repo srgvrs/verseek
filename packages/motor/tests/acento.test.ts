@@ -160,4 +160,14 @@ describe("esAtono", () => {
   it("ACE-05: polisílabos no son átonos", () => {
     expect(esAtono("casa")).toBe(false);
   });
+
+  it("ACE-05: mayúsculas se normalizan a minúsculas", () => {
+    expect(esAtono("Un")).toBe(true);
+    expect(esAtono("En")).toBe(true);
+    expect(esAtono("Y")).toBe(true);
+  });
+
+  it("ACE-05: mayúsculas con tilde diacrítica siguen siendo tónicas", () => {
+    expect(esAtono("Él")).toBe(false);
+  });
 });
