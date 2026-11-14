@@ -80,7 +80,7 @@ function ajusteFinal(verso: string): number {
  *
  * Invariante: `unidades.length === esc.silabasMetricas`.
  */
-function unidadesMetricas(
+export function unidadesMetricas(
   escansion: Escansion,
   verso: string,
 ): number[][] {

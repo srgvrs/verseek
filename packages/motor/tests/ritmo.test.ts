@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
+import corpus from "./corpus/versos.json";
 import { resolverEscansion } from "../src/escansion.js";
-import { analizarRitmo } from "../src/ritmo.js";
+import { analizarRitmo, unidadesMetricas } from "../src/ritmo.js";
 
 describe("analizarRitmo", () => {
   it("verso vacío: patrón vacío, indeterminado", () => {
@@ -137,24 +138,14 @@ describe("analizarRitmo", () => {
     }
   });
 
-  it("invariante: unidades.length === silabasMetricas", () => {
-    const casos = [
-      "la aurora",
-      "y en aérea fantástica danza",
-      "como afrentas las estrellas una a una",
-    ];
-    for (const v of casos) {
-      const esc = resolverEscansion(v, []);
-      const r = analizarRitmo(esc, v);
-      // El patrón se ajusta por ley de acento final; las unidades no.
-      // Reconstruimos el nº de unidades a partir del patrón sin ajuste.
-      const ajuste =
-        r.patron.length - esc.silabasMetricas;
-      // patron.length = unidades + ajuste ⇒ unidades = patron.length - ajuste
-      // pero ajuste ya está incorporado; comprobamos directamente:
-      expect(r.patron.length - ajuste).toBe(esc.silabasMetricas);
-    }
-  });
+  it.each(corpus)(
+    "invariante: unidadesMetricas.length === silabasMetricas ($id)",
+    (v) => {
+      const esc = resolverEscansion(v.texto, v.elecciones as any);
+      const unidades = unidadesMetricas(esc, v.texto);
+      expect(unidades.length).toBe(esc.silabasMetricas);
+    },
+  );
 
   it("coherencia: cada T de patron aparece en posicionesTonicas", () => {
     const casos = [
