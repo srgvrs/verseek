@@ -6,6 +6,4 @@ dist/
 coverage/
 .aider*
 .venv/
-ARQUITECTURE.md
-AGENTS.md
-CHANGELOG.md
+
