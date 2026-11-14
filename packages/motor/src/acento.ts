@@ -38,7 +38,8 @@ function tieneTilde(texto: string): boolean {
   return false;
 }
 
-function terminaEnVocalNoS(palabra: string): boolean {
+/** §4.3: termina en vocal, `n` o `s` → llana; en el resto → aguda. */
+function terminaEnVocalN o S(palabra: string): boolean {
   const ultimo = palabra[palabra.length - 1] ?? "";
   const l = ultimo.toLowerCase();
   return l === "a" || l === "e" || l === "i" || l === "o" || l === "u" || l === "n" || l === "s";
@@ -75,10 +76,10 @@ function analizarBase(palabra: string): ResultadoAcento {
     }
   }
 
-  // §4.3: sin tilde, aguda si termina en vocal/n/s; llana en el resto.
-  const esAguda = terminaEnVocalNoS(palabra);
-  const idx = esAguda ? silabas.length - 1 : silabas.length - 2;
-  const tipo: TipoAcento = esAguda ? "aguda" : "llana";
+  // §4.3: sin tilde, llana si termina en vocal/n/s; aguda en el resto.
+  const esLlana = terminaEnVocalNoS(palabra);
+  const idx = esLlana ? silabas.length - 2 : silabas.length - 1;
+  const tipo: TipoAcento = esLlana ? "llana" : "aguda";
   return {
     tipo,
     silabaTonica: idx,
