@@ -1,0 +1,170 @@
+Aquí tienes el **Manual de Instalación y Colaboración** completo. Puedes copiar todo este texto y guardarlo en la raíz de tu proyecto como `README.md` (o en `docs/MANUAL.md`). 
+
+Está diseñado para que cualquier persona de tu equipo pueda clonar el repositorio, levantar la base de datos local desde cero y empezar a programar sin dolores de cabeza.
+
+---
+
+# 📘 Manual de Instalación y Colaboración - Control de Asistencia Escolar
+
+Este proyecto es una aplicación de control escolar construida con **Next.js, Payload CMS y SQLite**. Este manual explica cómo instalar el proyecto desde cero en una computadora nueva, cómo configurar los usuarios iniciales y cómo colaborar en el repositorio usando Git y GitHub.
+
+---
+
+## 1. Requisitos Previos
+
+Antes de empezar, asegúrate de tener instalado en tu sistema:
+*   **Node.js** (Versión 22 o superior, idealmente 24).
+*   **pnpm** (Manejador de paquetes rápido, obligatorio para este proyecto):
+    ```bash
+    npm install -g pnpm
+    ```
+*   **Git** (Para clonar el repositorio).
+*   **VS Code** (Editor recomendado).
+
+---
+
+## 2. Instalación desde Cero (Para nuevos desarrolladores)
+
+Sigue estos pasos exactos para tener el proyecto corriendo en tu computadora por primera vez.
+
+### Paso 1: Clonar el repositorio
+```bash
+git clone https://github.com/TU-USUARIO/control-asistencia.git
+cd control-asistencia
+```
+
+### Paso 2: Instalar las dependencias
+```bash
+pnpm install
+```
+*(Nota: Si tienes problemas con el archivo `pnpm-workspace.yaml`, bórralo o renómbralo a `.bak`. El proyecto funciona como una app única, no como un monorepo).*
+
+### Paso 3: Configurar las variables de entorno (`.env`)
+Crea un archivo llamado `.env` en la raíz del proyecto y pega lo siguiente:
+```env
+# Secreto para encriptar sesiones de Payload
+PAYLOAD_SECRET=super-secret-local-key-12345
+
+# Ruta de la base de datos SQLite (se creará automáticamente)
+DATABASE_URI=file:./school.db
+```
+
+### Paso 4: Crear las tablas de la Base de Datos (Migraciones)
+Ejecuta el siguiente comando para que Payload cree el archivo `school.db` y todas las tablas relacionales (Alumnos, Grupos, etc.):
+```bash
+pnpm exec payload migrate
+```
+
+### Paso 5: Arrancar el servidor
+```bash
+pnpm dev
+```
+La aplicación estará disponible en `http://localhost:3000`.
+
+---
+
+## 3. Creación de Usuarios (Panel de Administración)
+
+El sistema tiene **dos tipos de usuarios** distintos. Es crucial entender esto:
+
+1.  **Admins (Administradores de Payload):** Son los que entran al panel de control del CMS en `http://localhost:3000/admin`. Usan **correo electrónico**.
+2.  **Users (Usuarios de la App):** Son los Directivos, Docentes y Vigilantes que usan la aplicación en `http://localhost:3000`. Usan **Nombre de usuario (Username)**.
+
+### Paso A: Crear el primer Admin
+1. Abre `http://localhost:3000/admin`.
+2. La pantalla te pedirá crear el primer usuario. Ingresa un correo (puede ser ficticio, como `admin@escuela.local`) y una contraseña.
+3. Una vez dentro, verás el panel de administración.
+
+### Paso B: Crear el primer Directivo (Usuario de la App)
+1. En el menú lateral de `/admin`, busca **Usuarios del sistema** y haz clic en "Crear nuevo".
+2. Llena los datos:
+   *   **Nombre de usuario:** `director` (Este será el usuario para entrar a la app).
+   *   **Contraseña:** Pon una contraseña segura.
+   *   **Nombre completo:** Ej. "Manolo Martínez".
+   *   **Rol:** Selecciona **"Directivo"**.
+3. Guarda los cambios.
+
+### Paso C: Iniciar sesión en la App
+1. Ve a `http://localhost:3000`.
+2. En "Nombre de usuario", escribe `director` (No uses el correo).
+3. Pon la contraseña y haz clic en "Ingresar al sistema".
+
+*Para crear un Docente o Vigilante, simplemente ve a `/admin` y crea otro usuario en "Usuarios del sistema" con el rol correspondiente.*
+
+---
+
+## 4. Colaboración en GitHub (Para el equipo)
+
+Si alguien de tu equipo quiere ayudar con el desarrollo, deben seguir este flujo de trabajo para evitar conflictos.
+
+### Regla de oro: NO subir la Base de Datos a Git
+Asegúrate de que tu `.gitignore` tenga estas líneas para no subir basura ni datos sensibles:
+```text
+# Variables de entorno
+.env
+
+# Base de datos local
+*.db
+*.db-journal
+```
+
+### Flujo de trabajo (Feature Branching)
+1.  **Actualizar el repositorio local:**
+    Antes de empezar, trae los últimos cambios de la rama principal:
+    ```bash
+    git checkout main
+    git pull origin main
+    ```
+2.  **Crear una rama para tu tarea:**
+    Nunca trabajes directamente en `main`. Crea una rama descriptiva:
+    ```bash
+    git checkout -b feature/nombre-de-tu-tarea
+    ```
+3.  **Hacer los cambios y probar:**
+    *   Si cambias el esquema de Payload (agregas campos, colecciones), debes crear una nueva migración:
+        ```bash
+        pnpm exec payload migrate:create
+        ```
+        *(Asegúrate de subir el archivo generado en `src/migrations/` a Git).*
+4.  **Hacer commit de tus cambios:**
+    ```bash
+    git add .
+    git commit -m "feat: descripción clara de lo que hiciste"
+    ```
+5.  **Subir la rama a GitHub:**
+    ```bash
+    git push origin feature/nombre-de-tu-tarea
+    ```
+6.  **Crear un Pull Request (PR):**
+    *   Ve a GitHub y verás un botón verde para "Compare & pull request".
+    *   Explica qué cambios hiciste.
+    *   Pide a otro miembro del equipo que lo revise y lo apruebe antes de hacer "Merge" a `main`.
+
+### Si usan Aider (IA para programar)
+Si van a usar Aider, recuerden cargar el archivo de reglas antes de empezar:
+```text
+/read-only docs/AGENTS.md
+/read-only docs/PLAN-ACTUAL.md
+```
+
+---
+
+## 5. Solución de Problemas Frecuentes (Troubleshooting)
+
+*   **Error: `pnpm-workspace.yaml` no existe o "packages field missing"**:
+    Renombra el archivo `pnpm-workspace.yaml` a `pnpm-workspace.yaml.bak` y vuelve a correr `pnpm install`.
+*   **Error: `EADDRINUSE` (Puerto 3000 ocupado)**:
+    Ya tienes otro servidor corriendo. Ciérralo o cambia el puerto en `package.json` a `--port 3001`.
+*   **Error: `Table not found` o los datos no se guardan**:
+    Falta aplicar las migraciones. Detén el servidor y corre `pnpm exec payload migrate`.
+*   **No aparecen las colecciones en el panel `/admin`**:
+    Es probable que hayas cambiado las reglas de acceso y tu usuario Admin no tenga permisos, o que falte correr `pnpm exec payload generate:importmap`.
+*   **¿Cómo regenerar los tipos de TypeScript?**
+    Si cambiaste el esquema, corre:
+    ```bash
+    pnpm exec payload generate:types
+    ```
+
+---
+
+**¡Listo!** Este `README.md` será la biblia de tu proyecto. Cópialo y pégalo en tu repositorio de GitHub para que cualquier persona que se una al equipo sepa exactamente qué hacer.
