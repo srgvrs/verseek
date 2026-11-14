@@ -93,12 +93,9 @@ function construirPatron(escansion: Escansion, verso: string): ("T" | "a")[] {
     for (let k = 0; k < -ajuste; k++) patron.pop();
   }
 
-  // Coherencia con `escansion.silabasMetricas`: si difieren, se ajusta el
-  // patrón al conteo de la escansión (rellenando con átonas o recortando).
-  const objetivo = escansion.silabasMetricas;
-  while (patron.length < objetivo) patron.push("a");
-  while (patron.length > objetivo) patron.pop();
-
+  // §8.3: el patrón refleja el cómputo métrico DESPUÉS de la ley de acento
+  // final. No se recorta contra `escansion.silabasMetricas` (que es el conteo
+  // previo al ajuste); hacerlo desharía la ley de acento final.
   return patron;
 }
 
@@ -163,7 +160,10 @@ function etiquetar(
     return { etiqueta: "mixto", confianza: 0.4 };
   }
 
-  return { etiqueta: "indeterminado", confianza: 0.2 };
+  // §8.5: si el patrón no es uniforme, se clasifica por la paridad de la
+  // última tónica (métrica acentual). Confianza baja por la irregularidad.
+  const etiqueta: EtiquetaRitmo = ultima % 2 === 0 ? "trocaico" : "yambico";
+  return { etiqueta, confianza: 0.3 };
 }
 
 /**
