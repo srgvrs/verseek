@@ -10,10 +10,10 @@
 | `licencias.ts` | ✅ Implementado (§5, S-44…S-53) | 15 |
 | `escansion.ts` | ✅ Implementado (§6, S-54…S-60) | 10 |
 | `computo.ts` | ✅ Implementado (§7, S-61…S-67) | 8 |
-| `ritmo.ts` | ❌ Fuera de alcance (fase 6) | — |
+| `ritmo.ts` | ✅ Implementado (experimental) | — |
 | `rima.ts` | ❌ Fuera de alcance (fase 6) | — |
 
-Total: **86 tests en verde** (6 archivos).
+Total: **86+ tests en verde** (7 archivos).
 
 ## Fase 2 del motor: cerrada
 
@@ -59,6 +59,6 @@ ritmo.
 
 ## Fuera de alcance de esta fase
 
-- `ritmo.ts` y `rima.ts` (fase 6 del `ARCHITECTURE.md`).
+- `rima.ts` (fase 6 del `ARCHITECTURE.md`).
 - Anclaje robusto de elecciones por offset+contexto (fase 4).
 - UI, Web Worker, IndexedDB, Capacitor (fases 3–5).

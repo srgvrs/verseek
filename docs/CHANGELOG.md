@@ -28,7 +28,7 @@
 
 ### Fuera de alcance de esta fase
 
-- `ritmo.ts` y `rima.ts` (fase 6 del `ARCHITECTURE.md`).
+- `rima.ts` (fase 6 del `ARCHITECTURE.md`).
 - Anclaje robusto de elecciones por offset+contexto (fase 4).
 - UI, Web Worker, IndexedDB, Capacitor (fases 3–5).
 ## [Unreleased]
@@ -54,3 +54,14 @@
   esdrújula, monosílabo, sinalefa + llana, sinalefa + aguda, puntuación final).
 - `SPEC.propuesta.md` §7 (S-61…S-67) y contratos públicos actualizados.
 - `index.ts` reexporta `computar` y `Computo`.
+
+### Added (ritmo)
+- `packages/motor/src/ritmo.ts`: `analizarRitmo(escansion, verso)` construye el
+  patrón de acentos (`"T"` / `"a"`) por sílaba métrica, expone las posiciones
+  tónicas (1-based) y devuelve una etiqueta experimental de ritmo
+  (`yambico`, `trocaico`, `dactilico`, `anapestico`, `mixto`) con su nivel de
+  confianza en `[0, 1]`. Aplica el ajuste de acento final (aguda +1,
+  esdrújula/sobresdrújula −1) para alinear el patrón con las sílabas métricas.
+- `packages/motor/tests/ritmo.test.ts`: tests del patrón, posiciones tónicas,
+  etiquetas y confianza.
+- `index.ts` reexporta `analizarRitmo`, `Ritmo` y `EtiquetaRitmo`.
