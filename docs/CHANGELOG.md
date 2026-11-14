@@ -31,3 +31,17 @@
 - `ritmo.ts` y `rima.ts` (fase 6 del `ARCHITECTURE.md`).
 - Anclaje robusto de elecciones por offset+contexto (fase 4).
 - UI, Web Worker, IndexedDB, Capacitor (fases 3–5).
+## [Unreleased]
+
+### Added
+- `packages/motor/src/escansion.ts`: `resolverEscansion(verso, elecciones)`
+  resuelve candidatos de `licencias.ts` contra las `Eleccion[]` del usuario
+  y produce una `Escansion` con `silabasMetricas`, `eleccionesAplicadas` y
+  `eleccionesHuerfanas`. Sin elección → baseline (silabeo plano). Sinalefa e
+  hiato son excluyentes por frontera. Sinéresis/diéresis se suman a las
+  elecciones entre palabras.
+- `packages/motor/tests/escansion.test.ts`: 10 tests (baseline, sinalefa
+  aplicada/no aplicada, huérfana, exclusión sinalefa/hiato, sinéresis,
+  diéresis, idempotencia).
+- `SPEC.propuesta.md` §6 (S-54…S-60) y contratos públicos actualizados.
+- `index.ts` reexporta `resolverEscansion`, `Eleccion` y `Escansion`.

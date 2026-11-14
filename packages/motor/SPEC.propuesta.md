@@ -367,6 +367,69 @@ export function detectarCandidatos(verso: string): readonly Candidato[];
 
 ---
 
+## §6 Escansión (spike)
+
+Contexto del `SPEC.md` real: §6 (escansión) aún no tiene IDs asignados. Aquí
+se concretan las decisiones mínimas para poder implementar `escansion.ts`.
+
+### §6.1 Firma y resultado
+
+```ts
+export interface Eleccion {
+  readonly tipo: TipoLicencia;
+  readonly palabraA: number;
+  readonly palabraB: number;
+  readonly valor: "aplicar" | "no-aplicar";
+}
+
+export interface Escansion {
+  readonly silabas: readonly Silaba[];
+  readonly silabasMetricas: number;
+  readonly eleccionesAplicadas: readonly Eleccion[];
+  readonly eleccionesHuerfanas: readonly Eleccion[];
+}
+
+export function resolverEscansion(
+  verso: string,
+  elecciones: readonly Eleccion[],
+): Escansion;
+```
+
+// [DECISIÓN] La firma es `resolverEscansion(verso, elecciones) → Escansion`. Función pura e idempotente.
+// Justificación: `computo` necesita una escansión ya resuelta; la UI necesita saber qué elecciones se aplicaron y cuáles quedaron huérfanas.
+
+// [DECISIÓN] `Eleccion` usa `palabraA`/`palabraB` + `tipo` como ancla (no offset+contexto). El anclaje robusto del `ARCHITECTURE.md` §6 queda para fase 4.
+// Justificación: en el spike basta con identificar la frontera por índices de palabra; el anclaje por offset+contexto requiere más infraestructura.
+
+### §6.2 Sin elección
+
+// [DECISIÓN] Si el usuario no envía ninguna elección, NO se aplica ninguna licencia. La escansión es el silabeo plano de cada palabra.
+// Justificación: el motor no elige por el usuario (ARCHITECTURE §3.3). El baseline es la lectura literal del texto.
+
+### §6.3 Elecciones huérfanas
+
+// [DECISIÓN] Una `Eleccion` cuya `(tipo, palabraA, palabraB)` no coincide con ningún candidato detectado se reporta en `eleccionesHuerfanas` y NO se aplica.
+// Justificación: si el texto cambió y la frontera ya no existe, aplicar la elección corrompería el análisis. Reportarla permite a la UI decidir.
+
+### §6.4 Sinalefa vs. hiato
+
+// [DECISIÓN] Sinalefa e hiato sobre la misma frontera son mutuamente excluyentes. Si el usuario envía ambas, gana la última del array.
+// Justificación: son lecturas alternativas de la misma frontera; no pueden coexistir.
+
+### §6.5 Combinación intra-palabra + entre palabras
+
+// [DECISIÓN] Sinéresis y diéresis intra-palabra se combinan con las elecciones entre palabras sumando sus deltas de sílabas (`silabasCon - silabasSin`).
+// Justificación: cada licencia afecta a un punto distinto del verso; sus efectos son aditivos.
+
+### §6.6 Fuera de alcance de `escansion`
+
+- Cómputo métrico final (ley de acento final): `computo`.
+- Anclaje robusto por offset+contexto: fase 4.
+- Reordenar o fusionar sílabas en el array `silabas` (por ahora se devuelve el silabeo plano; el delta se refleja solo en `silabasMetricas`).
+// Justificación: en el spike basta con el conteo; la fusión visual de sílabas es trabajo de la UI.
+
+---
+
 ## §13 Contratos públicos (spike)
 
 // [DECISIÓN] Se declaran aquí los contratos de `normalizar` y `silabeo`. Los contratos de `acento`, `licencias`, `computo`, `Candidato` y `Eleccion` NO se definen todavía.
@@ -425,18 +488,42 @@ export function detectarCandidatos(verso: string): readonly Candidato[];
 ```
 
 ```ts
+// packages/motor/src/escansion.ts — superficie pública
+export interface Eleccion {
+  readonly tipo: TipoLicencia;
+  readonly palabraA: number;
+  readonly palabraB: number;
+  readonly valor: "aplicar" | "no-aplicar";
+}
+
+export interface Escansion {
+  readonly silabas: readonly Silaba[];
+  readonly silabasMetricas: number;
+  readonly eleccionesAplicadas: readonly Eleccion[];
+  readonly eleccionesHuerfanas: readonly Eleccion[];
+}
+
+export function resolverEscansion(
+  verso: string,
+  elecciones: readonly Eleccion[],
+): Escansion;
+```
+
+```ts
 // packages/motor/src/index.ts — reexports de la fachada
 export type { ResultadoNormalizacion } from "./normalizar.js";
 export type { Silaba } from "./silabeo.js";
 export type { ResultadoAcento, TipoAcento } from "./acento.js";
 export type { Candidato, TipoLicencia } from "./licencias.js";
+export type { Eleccion, Escansion } from "./escansion.js";
 export { normalizar } from "./normalizar.js";
 export { silabear } from "./silabeo.js";
 export { clasificarAcento } from "./acento.js";
 export { detectarCandidatos } from "./licencias.js";
+export { resolverEscansion } from "./escansion.js";
 ```
 
-// [DECISIÓN] `index.ts` reexporta `normalizar`, `silabear`, `clasificarAcento`, `detectarCandidatos` y sus tipos, y nada más, hasta que existan los demás módulos.
+// [DECISIÓN] `index.ts` reexporta `normalizar`, `silabear`, `clasificarAcento`, `detectarCandidatos`, `resolverEscansion` y sus tipos, y nada más, hasta que existan los demás módulos.
 // Justificación: la fachada pública no debe exponer símbolos no implementados.
 
 ---
@@ -498,3 +585,10 @@ export { detectarCandidatos } from "./licencias.js";
 | S-51  | §5.6    | puntuación entre palabras bloquea sinalefa           | spike        |
 | S-52  | §5.7    | *h* muda inicial no bloquea sinalefa                 | spike        |
 | S-53  | §5.7    | *h* aspirada fuera de alcance                        | spike        |
+| S-54  | §6.1    | firma `resolverEscansion(verso, elecciones) → Escansion` | spike    |
+| S-55  | §6.1    | `Eleccion` con `{ tipo, palabraA, palabraB, valor }` | spike        |
+| S-56  | §6.1    | `Escansion` con `{ silabas, silabasMetricas, eleccionesAplicadas, eleccionesHuerfanas }` | spike |
+| S-57  | §6.2    | sin elección → no se aplica ninguna licencia         | spike        |
+| S-58  | §6.3    | elección huérfana → se reporta, no se aplica         | spike        |
+| S-59  | §6.4    | sinalefa e hiato excluyentes; gana la última         | spike        |
+| S-60  | §6.5    | sinéresis/diéresis se suman a sinalefa/hiato         | spike        |
