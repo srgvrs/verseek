@@ -56,8 +56,8 @@
     "foneticas": 10,
     "metricas": 8,
     "tonicas": [4, 7],
-    "elecciones": ["cruel:monosilabo"],
-    "categoria": "sinalefa_y_sinéresis"
+    "elecciones": [],
+    "categoria": "sinalefa"
   },
   {
     "id": "marti-vs-06",
@@ -164,7 +164,7 @@
     "foneticas": 8,
     "metricas": 8,
     "tonicas": [1, 3, 5, 7],
-    "elecciones": ["aguda:+1"],
+    "elecciones": [],
     "categoria": "sinalefa_y_aguda"
   },
   {
@@ -188,7 +188,7 @@
     "foneticas": 8,
     "metricas": 8,
     "tonicas": [3, 5, 7],
-    "elecciones": ["aguda:+1"],
+    "elecciones": [],
     "categoria": "sinalefa_y_aguda"
   },
   {
@@ -212,7 +212,7 @@
     "foneticas": 8,
     "metricas": 8,
     "tonicas": [3, 5, 7],
-    "elecciones": ["aguda:+1"],
+    "elecciones": [],
     "categoria": "sinalefa_y_aguda"
   },
   {
@@ -236,7 +236,7 @@
     "foneticas": 9,
     "metricas": 8,
     "tonicas": [1, 4, 7],
-    "elecciones": ["aguda:+1"],
+    "elecciones": [],
     "categoria": "sinalefa_y_aguda"
   },
   {
