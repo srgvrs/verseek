@@ -10,10 +10,10 @@
 | `licencias.ts` | ✅ Implementado (§5, S-44…S-53) | 15 |
 | `escansion.ts` | ✅ Implementado (§6, S-54…S-60) | 10 |
 | `computo.ts` | ✅ Implementado (§7, S-61…S-67) | 8 |
-| `ritmo.ts` | ✅ Implementado (experimental) | — |
+| `ritmo.ts` | ✅ Implementado (experimental) | 13 |
 | `rima.ts` | ❌ Fuera de alcance (fase 6) | — |
 
-Total: **86+ tests en verde** (7 archivos).
+Total: **112 tests en verde** (8 archivos).
 
 ## Fase 2 del motor: cerrada
 
