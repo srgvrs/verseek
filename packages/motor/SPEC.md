@@ -219,6 +219,7 @@ La equivalencia i/e, u/o es una convención **normativa**, no una descripción f
 | OVR-02 | Un override se ancla a la **palabra y su número de ocurrencia dentro del verso**, no a la posición en el texto. Así sobrevive a las ediciones. | `propuesta` |
 | OVR-03 | Prioridad: override del usuario, luego regla del SPEC. | `propuesta` |
 | OVR-04 | Los overrides nunca modifican el texto original. | `decidida` |
+| OVR-05 | Las elecciones de sinéresis/diéresis se anclan solo a la palabra. La sinéresis se aplica al último par de vocales en hiato de la palabra; la diéresis, al primer diptongo. Tras la diéresis, la tónica queda en la mitad con la vocal tónica de la palabra. Anclaje exacto: fuera de v1. | `propuesta` |
 
 ### Nota sobre OVR-01 y OVR-02
 El fundamento teórico está en el cuadro de Jakobson (ver nota en ALC-04). El motor produce un *ejemplo de verso*; los overrides permiten adoptar un *modelo de ejecución* distinto. Por eso se anclan a la palabra y su ocurrencia: el modelo de ejecución es una decisión del lector sobre palabras concretas.
