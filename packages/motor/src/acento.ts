@@ -39,7 +39,7 @@ function tieneTilde(texto: string): boolean {
 }
 
 /** §4.3: termina en vocal, `n` o `s` → llana; en el resto → aguda. */
-function terminaEnVocalN o S(palabra: string): boolean {
+function terminaEnVocalNoS(palabra: string): boolean {
   const ultimo = palabra[palabra.length - 1] ?? "";
   const l = ultimo.toLowerCase();
   return l === "a" || l === "e" || l === "i" || l === "o" || l === "u" || l === "n" || l === "s";
