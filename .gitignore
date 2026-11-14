@@ -4,3 +4,8 @@ dist/
 *.log
 .DS_Store
 coverage/
+.aider*
+.venv/
+ARQUITECTURE.md
+AGENTS.md
+CHANGELOG.md
