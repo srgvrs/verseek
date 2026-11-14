@@ -222,7 +222,8 @@ El fundamento teórico está en el cuadro de Jakobson (ver nota en ALC-04). El m
 | **D2** | Grupo *tl* (SIL-11) | *a-tlas* (frecuente en México) o *at-las* (frecuente en España). | Sin evidencia en [NE1]/[NE2]. |
 | **D3** | *h* intercalada (SIL-12) | ¿Impide el diptongo o se ignora? Verificar en RAE *Ortografía* 2010. | Sin evidencia en [NE1]/[NE2]. |
 | **D4** | Prefijos (SIL-13) | ¿Se silabea por morfología o solo por reglas fonéticas? | Sin evidencia en [NE1]/[NE2]. |
-| **D5** | Lista de monosílabos átonos (ACE-05) | Propuesta de partida: artículos, preposiciones y conjunciones breves, pronombres átonos, posesivos antepuestos. Cerrar la lista concreta con una fuente. | Sin evidencia en [NE1]/[NE2]. |
+| **D5** | Lista de monosílabos átonos (ACE-05) | Propuesta de partida: artículos, preposiciones y conjunciones breves, pronombres átonos, posesivos antepuestos. Cerrar la lista concreta con una fuente. 
+| Sin evidencia en [NE1]/[NE2]. |
 | **D6** | Adverbios en *-mente* (ACE-06) | Una o dos tónicas. Si *men* cuenta como tónica, afecta al ritmo y a la rima (*claramente* ~ *-ente*). [DC] no lo define. | Sin evidencia en [NE1]/[NE2]. |
 | **D7** | Sinalefa y vocal tónica final (LIC-03, LIC-10) | **Cerrada: no bloquear.** La sinalefa se aplica por defecto aunque la vocal final sea tónica o cerrada con tilde (*su último* → *su‿úl*). Las conjunciones *e, o, y* siguen LIC-03 (no sinalefa triple por defecto). | **[NE1] cap. IX (Urna votiva, pp. 136-137)** documenta sinalefas con vocal tónica sin problema. La evidencia apoya mantener LIC-01 y tratar D7 como override, no como bloqueo automático. |
 | **D8** | Orden de aplicación de las licencias | Primero silabeo, luego sinalefa, luego cómputo. Confirmar que no hay interacciones que obliguen a otro orden. | Sin evidencia en [NE1]/[NE2]. |
