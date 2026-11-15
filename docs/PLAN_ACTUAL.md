@@ -10,12 +10,12 @@
 | `licencias.ts` | ✅ Implementado (§5, S-44…S-53) | 15 |
 | `escansion.ts` | ✅ Implementado (§6, S-54…S-60) | 10 |
 | `computo.ts` | ✅ Implementado (§7, S-61…S-67, COM-02b) | 10 |
-| `ritmo.ts` | 🟡 Implementado (experimental, en revisión) | 49 |
+| `ritmo.ts` | 🟡 Implementado (experimental, en revisión) | 58 |
 | `rima.ts` | ❌ Fuera de alcance (fase 6) | — |
 
-Total: **231 tests en verde y 17 fallos en corpus-ritmo.test.ts (248 en
-total, 10 archivos)**, incluido el corpus de oro (`tests/corpus.test.ts`,
-27 versos).
+Total: **262 tests en verde, 0 fallos (10 archivos)**, incluido el corpus de
+oro (`tests/corpus.test.ts`, 27 versos) y `corpus-ritmo.test.ts` (54/54).
+`acento.test.ts` tiene 30 tests.
 
 ## Fase 2 del motor: 🟡 EN CURSO
 
@@ -29,10 +29,9 @@ El pipeline completo funciona:
 normalizar → silabeo → acento → licencias → escansion → computo
 ```
 
-Estado: **231 tests en verde y 17 fallos en corpus-ritmo.test.ts (248 en
-total, 10 archivos)**. Fase 2 **en curso**.
+Estado: **262 tests en verde, 0 fallos (10 archivos)**. Fase 2 **en curso**.
 
-### Hecho (2026-11-14)
+### Hecho (2026-11-15)
 
 - **Cómputo silábico validado**: `tests/corpus.test.ts` pasa completo con
   **27 versos**.
@@ -44,18 +43,29 @@ total, 10 archivos)**. Fase 2 **en curso**.
 - Pruebas ACE-05b del monosílabo final de verso.
 - Sinéresis/diéresis respetadas al calcular unidades métricas (OVR-05,
   propuesta).
+- **ACE-06**: adverbios en `-mente` con dos tónicas (base + `men`). Lista
+  manual `NO_ADVERBIOS_MENTE` para `demente`, `clemente`, `inclemente`,
+  `vehemente`, `mente`.
+- **OVR-06**: override de acento (`tipo: "acento"` con campo `silaba`).
+  Solo afecta a `patron` y `posicionesTonicas`; no altera el cómputo.
+- **Corpus de ritmo corregido** contra escansión manual (tónicas léxicas con
+  ACE-05). `corpus-ritmo.test.ts` pasa completo (54/54). Los versos
+  corregidos siguen con `"verificado": "pendiente"` en el JSON.
 
-### Pendiente (2026-11-14)
+### Limitación conocida (2026-11-15)
 
-- **`corpus-ritmo.test.ts`: 17 fallos.** Hipótesis por verificar: la mayoría
-  serían oráculos `tonicas` del JSON sin contrastar con la fuente; no
-  confirmado. Falta definir en el SPEC qué significa `tonicas` (propuesta:
-  tónicas léxicas con ACE-05, sin acento rítmico).
-- **D6**: adverbios en `-mente`.
+- Formas verbales terminadas en `-mente` (`lamente`, `comente`, `aumente`)
+  se tratarían como adverbios.
+
+### Pendiente (2026-11-15)
+
 - **D11**: `ü` automática.
-- **Anclaje de elecciones intra-palabra** (OVR-05).
+- **Anclaje de elecciones intra-palabra**.
+- **Contrato motor–Worker** para la UI y offsets de candidatos de licencia.
 - **Script de revisión de tónicas**: necesita runner; se propone `tsx`.
-- **Limpieza de notas "BUG MOTOR"** obsoletas en el JSON del corpus.
+- **Limpieza de notas "BUG MOTOR"** y fonéticas incoherentes en el JSON del
+  corpus.
+- **Verificar contra fuente** los versos corregidos.
 - **Orden de docs en git** (ruta de archivos movidos) — *por confirmar*.
 - **Unificar los dos SPEC** (`SPEC.md` y `SPEC.propuesta.md`) — *por
   confirmar* cuál es la fuente canónica.
@@ -102,8 +112,9 @@ añadir debounce, decoraciones por verso/sílaba y el `Map` de elecciones en
 ## Siguiente sesión: cerrar Fase 2 y luego Fase 3 (Editor Web)
 
 Antes de la Fase 3, cerrar los pendientes de la Fase 2 listados arriba
-(oráculos `tonicas`, D6, D11, anclaje intra-palabra, script de revisión,
-limpieza del JSON, unificación de SPEC). Después, la Fase 3:
+(D11, anclaje intra-palabra, contrato motor–Worker y offsets de candidatos,
+script de revisión, limpieza del JSON, verificación contra fuente,
+unificación de SPEC). Después, la Fase 3:
 
 ## Fase 3 (Editor Web) — pipeline real
 

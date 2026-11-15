@@ -33,6 +33,35 @@
 - UI, Web Worker, IndexedDB, Capacitor (fases 3–5).
 ## [Unreleased]
 
+### Estado al 2026-11-15
+
+**Fase 2 en curso** (no completada). Suite completa en verde: **262 tests
+(10 archivos), 0 fallos**. `corpus-ritmo.test.ts` pasa completo (54/54);
+`ritmo.test.ts` tiene 58 tests y `acento.test.ts` 30.
+
+#### Hecho desde el 2026-11-14
+- **ACE-06**: adverbios en `-mente` con dos tónicas (base + `men`). Lista
+  manual `NO_ADVERBIOS_MENTE` para `demente`, `clemente`, `inclemente`,
+  `vehemente`, `mente`, que se analizan como palabras normales.
+- **OVR-06**: override de acento (`tipo: "acento"` con campo `silaba`).
+  Solo afecta a `patron` y `posicionesTonicas`; no altera el cómputo.
+- **Corpus de ritmo corregido** contra escansión manual (tónicas léxicas con
+  ACE-05). Los versos corregidos siguen con `"verificado": "pendiente"` en
+  el JSON.
+
+#### Limitación conocida
+- Formas verbales terminadas en `-mente` (`lamente`, `comente`, `aumente`)
+  se tratarían como adverbios.
+
+#### Pendiente
+- D11 (`ü` automática).
+- Anclaje de elecciones intra-palabra.
+- Contrato motor–Worker para la UI y offsets de candidatos de licencia.
+- Script de revisión de tónicas (se propone `tsx`).
+- Limpieza de notas "BUG MOTOR" y fonéticas incoherentes en el JSON.
+- Verificar contra fuente los versos corregidos.
+- Orden de docs en git y unificar los dos SPEC — **por confirmar**.
+
 ### Estado al 2026-11-14
 
 **Fase 2 en curso** (no completada). Corrección respecto a la entrada previa
