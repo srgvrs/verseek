@@ -7,6 +7,7 @@ import {
   analizarRitmo,
   computar,
   resolverEscansion,
+  unidadesMetricas,
   type Eleccion,
 } from "../src/index.js";
 
@@ -56,15 +57,31 @@ describe("analizarVerso", () => {
       const elecciones = v.elecciones as unknown as Eleccion[];
       const r = analizarVerso(v.texto, elecciones);
       if (r.ritmo === null) return;
-      const tonicas = r.silabas
-        .map((s, i) => (s.tonica ? i + 1 : -1))
-        .filter((i) => i > 0);
-      // `posicionesTonicas` se calcula sobre unidades métricas (con
-      // sinalefas fusionadas), así que sólo comparamos el conjunto de
-      // sílabas planas tónicas cuando no hay fusiones.
-      if (r.ritmo.patron.length === r.silabas.length) {
-        expect(tonicas).toEqual([...r.ritmo.posicionesTonicas]);
+
+      // v1: `silabas` son sílabas escritas (ver OVR-05). Con sinéresis o
+      // diéresis aplicadas, las unidades métricas no se corresponden 1:1
+      // con las sílabas escritas, así que se omite la comparación.
+      const tieneIntra = r.eleccionesAplicadas.some(
+        (e) =>
+          e.valor === "aplicar" &&
+          (e.tipo === "sineresis" || e.tipo === "dieresis"),
+      );
+      if (tieneIntra) return;
+
+      // Agrupar silabas[].tonica por unidades métricas: una unidad es
+      // tónica si alguna de sus sílabas lo es.
+      const esc = resolverEscansion(v.texto, elecciones);
+      const unidades = unidadesMetricas(esc, v.texto);
+      const posiciones: number[] = [];
+      for (let u = 0; u < unidades.length; u++) {
+        const grupo = unidades[u];
+        if (grupo === undefined) continue;
+        const esTonica = grupo.some(
+          (i) => i >= 0 && r.silabas[i]?.tonica === true,
+        );
+        if (esTonica) posiciones.push(u + 1);
       }
+      expect(posiciones).toEqual([...r.ritmo.posicionesTonicas]);
     },
   );
 
@@ -108,6 +125,19 @@ describe("analizarVerso", () => {
       "que se debe a tu fama y a tu gloria",
       elecciones,
     );
+    // Diagnóstico temporal: inspeccionar candidatos y elecciones.
+    console.log("elecciones:", elecciones);
+    console.log(
+      "candidatos:",
+      r.candidatos.map((c) => ({
+        tipo: c.tipo,
+        palabraA: c.palabraA,
+        palabraB: c.palabraB,
+        activo: c.activo,
+      })),
+    );
+    console.log("eleccionesAplicadas:", r.eleccionesAplicadas);
+    console.log("eleccionesHuerfanas:", r.eleccionesHuerfanas);
     const sinalefa = r.candidatos.find(
       (c) => c.tipo === "sinalefa" && c.palabraA === 4 && c.palabraB === 5,
     );
