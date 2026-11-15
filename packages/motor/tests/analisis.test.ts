@@ -117,32 +117,51 @@ describe("analizarVerso", () => {
   });
 
   it("sinalefa desactivada por elección deja el hiato complementario activo", () => {
-    // "que se debe a tu fama y a tu gloria": se bloquea fama‿y‿a.
+    // "que se debe a tu fama y a tu gloria": se desactiva la sinalefa 2:3
+    // (debe‿a), que sí es un candidato real.
     const elecciones: Eleccion[] = [
-      { tipo: "sinalefa", palabraA: 4, palabraB: 5, valor: "no-aplicar" },
+      { tipo: "sinalefa", palabraA: 2, palabraB: 3, valor: "no-aplicar" },
     ];
     const r = analizarVerso(
       "que se debe a tu fama y a tu gloria",
       elecciones,
     );
-    // Diagnóstico temporal: inspeccionar candidatos y elecciones.
-    console.log("elecciones:", elecciones);
-    console.log(
-      "candidatos:",
-      r.candidatos.map((c) => ({
-        tipo: c.tipo,
-        palabraA: c.palabraA,
-        palabraB: c.palabraB,
-        activo: c.activo,
-      })),
-    );
-    console.log("eleccionesAplicadas:", r.eleccionesAplicadas);
-    console.log("eleccionesHuerfanas:", r.eleccionesHuerfanas);
     const sinalefa = r.candidatos.find(
-      (c) => c.tipo === "sinalefa" && c.palabraA === 4 && c.palabraB === 5,
+      (c) => c.tipo === "sinalefa" && c.palabraA === 2 && c.palabraB === 3,
     );
     const hiato = r.candidatos.find(
-      (c) => c.tipo === "hiato" && c.palabraA === 4 && c.palabraB === 5,
+      (c) => c.tipo === "hiato" && c.palabraA === 2 && c.palabraB === 3,
+    );
+    expect(sinalefa?.activo).toBe(false);
+    expect(hiato?.activo).toBe(true);
+    expect(r.eleccionesAplicadas).toContainEqual(elecciones[0]);
+  });
+
+  it("elección huérfana: sinalefa 4:5 no-aplicar no cambia nada", () => {
+    const texto = "que se debe a tu fama y a tu gloria";
+    const elecciones: Eleccion[] = [
+      { tipo: "sinalefa", palabraA: 4, palabraB: 5, valor: "no-aplicar" },
+    ];
+    const base = analizarVerso(texto, []);
+    const r = analizarVerso(texto, elecciones);
+
+    expect(r.eleccionesHuerfanas).toContainEqual(elecciones[0]);
+    expect(r.eleccionesAplicadas).toEqual([]);
+    expect(r.computo?.silabasMetricas).toBe(base.computo?.silabasMetricas);
+    expect(r.candidatos.map((c) => c.activo)).toEqual(
+      base.candidatos.map((c) => c.activo),
+    );
+  });
+
+  it("sin elecciones, LIC-03 desactiva la sinalefa 5:6 y activa su hiato", () => {
+    // "que se debe a tu fama y a tu gloria": fama‿y‿a forma sinalefa triple,
+    // así que LIC-03 bloquea fama‿y (5:6) por defecto.
+    const r = analizarVerso("que se debe a tu fama y a tu gloria", []);
+    const sinalefa = r.candidatos.find(
+      (c) => c.tipo === "sinalefa" && c.palabraA === 5 && c.palabraB === 6,
+    );
+    const hiato = r.candidatos.find(
+      (c) => c.tipo === "hiato" && c.palabraA === 5 && c.palabraB === 6,
     );
     expect(sinalefa?.activo).toBe(false);
     expect(hiato?.activo).toBe(true);
