@@ -1,5 +1,5 @@
 import { EditorView, basicSetup } from "codemirror";
-import { StateEffect, StateField } from "@codemirror/state";
+import { StateEffect, StateField, type Range } from "@codemirror/state";
 import {
   Decoration,
   WidgetType,
@@ -42,7 +42,7 @@ const campoMetricas = StateField.define<DecorationSet>({
     let next = deco.map(tr.changes);
     for (const e of tr.effects) {
       if (!e.is(setMetricas)) continue;
-      const widgets: Decoration[] = [];
+      const widgets: Range<Decoration>[] = [];
       const doc = tr.state.doc;
       for (const [linea, n] of e.value) {
         if (linea < 0 || linea >= doc.lines) continue;
