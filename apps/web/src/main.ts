@@ -12,7 +12,7 @@ if (app === null) {
   throw new Error('No se encontró el contenedor "#app" en el DOM.');
 }
 
-const view = montarEditor(app);
+let view: ReturnType<typeof montarEditor>;
 
 const worker = new Worker(
   new URL("./worker/analisis.worker.ts", import.meta.url),
@@ -62,7 +62,7 @@ worker.addEventListener("message", (ev: MessageEvent<MensajeSalida>) => {
   view.dispatch({ effects: setMetricas.of(metricas) });
 });
 
-view.dom.addEventListener("input", programarAnalisis);
+view = montarEditor(app, programarAnalisis);
 
 programarAnalisis();
 console.log("verseek web — editor montado");

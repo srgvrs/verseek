@@ -58,15 +58,22 @@ const campoMetricas = StateField.define<DecorationSet>({
 
 /**
  * Monta un editor CodeMirror 6 a pantalla completa dentro de `contenedor`.
- * Sin decoraciones todavía (Fase 3, Paso 3).
+ * `alCambiar` se invoca en cada transacción que modifique el documento
+ * (teclas, pegar, deshacer, comandos propios de CodeMirror, etc.).
  */
-export function montarEditor(contenedor: HTMLElement): EditorView {
+export function montarEditor(
+  contenedor: HTMLElement,
+  alCambiar?: () => void,
+): EditorView {
   const view = new EditorView({
     doc: "",
     parent: contenedor,
     extensions: [
       basicSetup,
       campoMetricas,
+      EditorView.updateListener.of((u) => {
+        if (u.docChanged) alCambiar?.();
+      }),
       EditorView.lineWrapping,
       EditorView.theme({
         "&": {
