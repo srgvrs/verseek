@@ -23,6 +23,7 @@ import {
   type TipoEleccion,
   type TipoLicencia,
 } from "./licencias.js";
+import { palabrasConOffsets } from "./palabras.js";
 import { silabear, type Silaba } from "./silabeo.js";
 
 export interface Eleccion {
@@ -57,18 +58,7 @@ export interface Escansion {
 
 /** Divide el verso en palabras (secuencias de letras), igual que `licencias`. */
 function partirPalabras(verso: string): readonly string[] {
-  const out: string[] = [];
-  let actual = "";
-  for (const c of verso) {
-    if (/^\p{L}$/u.test(c)) {
-      actual += c;
-    } else if (actual.length > 0) {
-      out.push(actual);
-      actual = "";
-    }
-  }
-  if (actual.length > 0) out.push(actual);
-  return out;
+  return palabrasConOffsets(verso).map((p) => p.texto);
 }
 
 /** Clave canónica de una frontera o punto intra-palabra. */

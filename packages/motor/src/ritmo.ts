@@ -19,6 +19,7 @@
 
 import { clasificarAcento, esAtono } from "./acento.js";
 import type { Escansion } from "./escansion.js";
+import { palabrasConOffsets } from "./palabras.js";
 import { silabear, type Silaba } from "./silabeo.js";
 
 export type EtiquetaRitmo =
@@ -42,18 +43,7 @@ export interface Ritmo {
 
 /** Divide el verso en palabras (secuencias de letras). */
 function partirPalabras(verso: string): readonly string[] {
-  const out: string[] = [];
-  let actual = "";
-  for (const c of verso) {
-    if (/^\p{L}$/u.test(c)) {
-      actual += c;
-    } else if (actual.length > 0) {
-      out.push(actual);
-      actual = "";
-    }
-  }
-  if (actual.length > 0) out.push(actual);
-  return out;
+  return palabrasConOffsets(verso).map((p) => p.texto);
 }
 
 /** Ajuste por ley de acento final (§8.3). */
