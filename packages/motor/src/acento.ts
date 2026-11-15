@@ -37,6 +37,19 @@ const VOCALES_TILDADAS = new Set(["á", "é", "í", "ó", "ú", "Á", "É", "Í"
  * minúsculas, de modo que las formas con tilde diacrítica (*él, mí, tú, sí,
  * té, sé, dé, qué, más*) NO están aquí y quedan como tónicas.
  */
+/**
+ * §ACE-06: palabras que terminan en `-mente` pero NO son adverbios. Se
+ * analizan como palabras normales (tónica solo en `men`), sin descomponer
+ * la base adjetival.
+ */
+const NO_ADVERBIOS_MENTE = new Set<string>([
+  "demente",
+  "clemente",
+  "inclemente",
+  "vehemente",
+  "mente",
+]);
+
 const MONOSILABOS_ATONOS = new Set<string>([
   // Artículos definidos, indeterminado y contracciones.
   "el", "la", "lo", "los", "las", "un", "del", "al",
@@ -127,8 +140,10 @@ export function clasificarAcento(palabra: string): ResultadoAcento {
   }
 
   // §4.5: adverbios en -mente → analizar la base.
+  // §ACE-06: salvo las palabras de NO_ADVERBIOS_MENTE, que se analizan
+  // como palabras normales (tónica solo en `men`).
   const lower = palabra.toLowerCase();
-  if (lower.endsWith("mente") && palabra.length > 5) {
+  if (lower.endsWith("mente") && palabra.length > 5 && !NO_ADVERBIOS_MENTE.has(lower)) {
     const base = palabra.slice(0, palabra.length - 5);
     const resultadoBase = analizarBase(base);
     const silabasCompletas = silabear(palabra);

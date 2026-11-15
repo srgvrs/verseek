@@ -80,6 +80,41 @@ describe("clasificarAcento", () => {
     const r = clasificarAcento("lentamente");
     expect(r.tipo).toBe("llana");
   });
+
+  it("ACE-06: 'demente' no es adverbio → tónica en 'men'", () => {
+    const r = clasificarAcento("demente");
+    expect(r.tipo).toBe("llana");
+    expect(r.silabaTonica).toBe(1);
+    expect(r.tonica?.texto).toBe("men");
+  });
+
+  it("ACE-06: 'clemente' no es adverbio → tónica en 'men'", () => {
+    const r = clasificarAcento("clemente");
+    expect(r.tipo).toBe("llana");
+    expect(r.silabaTonica).toBe(1);
+    expect(r.tonica?.texto).toBe("men");
+  });
+
+  it("ACE-06: 'inclemente' no es adverbio → tónica en 'men'", () => {
+    const r = clasificarAcento("inclemente");
+    expect(r.tipo).toBe("llana");
+    expect(r.silabaTonica).toBe(2);
+    expect(r.tonica?.texto).toBe("men");
+  });
+
+  it("ACE-06: 'vehemente' no es adverbio → tónica en 'men'", () => {
+    const r = clasificarAcento("vehemente");
+    expect(r.tipo).toBe("llana");
+    expect(r.silabaTonica).toBe(2);
+    expect(r.tonica?.texto).toBe("men");
+  });
+
+  it("ACE-06: 'mente' no es adverbio → tónica en 'men'", () => {
+    const r = clasificarAcento("mente");
+    expect(r.tipo).toBe("llana");
+    expect(r.silabaTonica).toBe(0);
+    expect(r.tonica?.texto).toBe("men");
+  });
 });
 
 describe("esAtono", () => {
