@@ -379,8 +379,15 @@ function tonicasPorSilaba(verso: string): boolean[] {
     // un monosílabo de la lista.
     const atono = w !== ultima && esAtono(p);
     const { silabaTonica } = clasificarAcento(p);
+    // §ACE-06: adverbios en -mente llevan dos tónicas: la de la base
+    // adjetival (ya marcada por `silabaTonica`) y la sílaba "men", que es
+    // la penúltima. Si la base no aporta tónica propia (p. ej. "demente",
+    // donde la penúltima ya es "men"), no se duplica.
+    const esMente = p.toLowerCase().endsWith("mente") && silabas.length >= 2;
+    const idxMen = esMente ? silabas.length - 2 : -1;
     for (let i = 0; i < silabas.length; i++) {
-      out.push(!atono && i === silabaTonica);
+      const tonica = i === silabaTonica || i === idxMen;
+      out.push(!atono && tonica);
     }
   }
   return out;

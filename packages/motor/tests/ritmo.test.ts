@@ -229,4 +229,27 @@ describe("analizarRitmo", () => {
     // que di-me lo → tónicas en 2 (di) y 4 (lo, por ACE-05b).
     expect(r.posicionesTonicas).toEqual([2, 4]);
   });
+
+  it("ACE-06: 'y las horas se van pausadamente' — dos tónicas en el adverbio", () => {
+    const esc = resolverEscansion("y las horas se van pausadamente", []);
+    const r = analizarRitmo(esc, "y las horas se van pausadamente");
+    // y las ho-ras se van pau-sa-da-men-te
+    // tónicas: ho (3), ra (6), da (8, base) y men (10, ACE-06).
+    expect(r.posicionesTonicas).toEqual([3, 6, 8, 10]);
+  });
+
+  it("ACE-06: 'lentamente' — tónicas en la base y en 'men'", () => {
+    const esc = resolverEscansion("lentamente", []);
+    const r = analizarRitmo(esc, "lentamente");
+    // len-ta-men-te → tónicas en 1 (len, base) y 3 (men, ACE-06).
+    expect(r.posicionesTonicas).toEqual([1, 3]);
+  });
+
+  it("ACE-06: 'demente' — no duplica la tónica de 'men'", () => {
+    const esc = resolverEscansion("demente", []);
+    const r = analizarRitmo(esc, "demente");
+    // de-men-te → tónica en 2 (men). La base "de" no aporta tónica extra
+    // y la penúltima ya es "men", así que no se duplica.
+    expect(r.posicionesTonicas).toEqual([2]);
+  });
 });
