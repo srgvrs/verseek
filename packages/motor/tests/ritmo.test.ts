@@ -252,4 +252,65 @@ describe("analizarRitmo", () => {
     // y la penúltima ya es "men", así que no se duplica.
     expect(r.posicionesTonicas).toEqual([2]);
   });
+
+  it("OVR-06: 'casa blanca' sin elecciones → [1, 3]", () => {
+    const esc = resolverEscansion("casa blanca", []);
+    const r = analizarRitmo(esc, "casa blanca");
+    expect(r.posicionesTonicas).toEqual([1, 3]);
+  });
+
+  it("OVR-06: 'casa blanca' acento aplicar (0, 1) → [1, 2, 3]", () => {
+    const esc = resolverEscansion("casa blanca", [
+      { tipo: "acento", palabraA: 0, palabraB: 0, silaba: 1, valor: "aplicar" },
+    ]);
+    const r = analizarRitmo(esc, "casa blanca");
+    expect(r.posicionesTonicas).toEqual([1, 2, 3]);
+  });
+
+  it("OVR-06: 'casa blanca' acento no-aplicar (0, 0) → [3]", () => {
+    const esc = resolverEscansion("casa blanca", [
+      { tipo: "acento", palabraA: 0, palabraB: 0, silaba: 0, valor: "no-aplicar" },
+    ]);
+    const r = analizarRitmo(esc, "casa blanca");
+    expect(r.posicionesTonicas).toEqual([3]);
+  });
+
+  it("OVR-06: 'casa blanca' mover tónica (0,0) no-aplicar + (0,1) aplicar → [2, 3]", () => {
+    const esc = resolverEscansion("casa blanca", [
+      { tipo: "acento", palabraA: 0, palabraB: 0, silaba: 0, valor: "no-aplicar" },
+      { tipo: "acento", palabraA: 0, palabraB: 0, silaba: 1, valor: "aplicar" },
+    ]);
+    const r = analizarRitmo(esc, "casa blanca");
+    expect(r.posicionesTonicas).toEqual([2, 3]);
+  });
+
+  it("OVR-06: 'en un intenso pálido llamar' acento aplicar (1, 0) → [2, 4, 6, 10]", () => {
+    const esc = resolverEscansion("en un intenso pálido llamar", [
+      { tipo: "acento", palabraA: 1, palabraB: 1, silaba: 0, valor: "aplicar" },
+    ]);
+    const r = analizarRitmo(esc, "en un intenso pálido llamar");
+    expect(r.posicionesTonicas).toEqual([2, 4, 6, 10]);
+  });
+
+  it("OVR-06: elecciones huérfanas (palabra 9 y sílaba 5) no cambian el patrón", () => {
+    const huerfanaSilaba: Eleccion = {
+      tipo: "acento",
+      palabraA: 0,
+      palabraB: 0,
+      silaba: 5,
+      valor: "aplicar",
+    };
+    const huerfanaPalabra: Eleccion = {
+      tipo: "acento",
+      palabraA: 9,
+      palabraB: 9,
+      silaba: 0,
+      valor: "aplicar",
+    };
+    const esc = resolverEscansion("casa blanca", [huerfanaSilaba, huerfanaPalabra]);
+    expect(esc.eleccionesHuerfanas).toEqual([huerfanaSilaba, huerfanaPalabra]);
+    expect(esc.eleccionesAplicadas).toEqual([]);
+    const r = analizarRitmo(esc, "casa blanca");
+    expect(r.posicionesTonicas).toEqual([1, 3]);
+  });
 });

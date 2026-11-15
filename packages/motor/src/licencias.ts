@@ -25,6 +25,12 @@ import { silabear, type Silaba } from "./silabeo.js";
 
 export type TipoLicencia = "sinalefa" | "hiato" | "sineresis" | "dieresis";
 
+/**
+ * §OVR-06: además de las licencias, una elección puede ser un override de
+ * acento sobre una sílaba concreta de una palabra.
+ */
+export type TipoEleccion = TipoLicencia | "acento";
+
 export interface Candidato {
   /** Tipo de licencia detectada. */
   readonly tipo: TipoLicencia;

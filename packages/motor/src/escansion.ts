@@ -17,13 +17,23 @@
  *    entre palabras sumando sus deltas de sílabas.
  */
 
-import { detectarCandidatos, type Candidato, type TipoLicencia } from "./licencias.js";
+import {
+  detectarCandidatos,
+  type Candidato,
+  type TipoEleccion,
+  type TipoLicencia,
+} from "./licencias.js";
 import { silabear, type Silaba } from "./silabeo.js";
 
 export interface Eleccion {
-  readonly tipo: TipoLicencia;
+  readonly tipo: TipoEleccion;
   readonly palabraA: number;
   readonly palabraB: number;
+  /**
+   * §OVR-06: índice (base 0) de la sílaba dentro de la palabra. Solo se usa
+   * cuando `tipo === "acento"`.
+   */
+  readonly silaba?: number;
   readonly valor: "aplicar" | "no-aplicar";
 }
 
@@ -143,6 +153,23 @@ export function resolverEscansion(
   const huerfanas: Eleccion[] = [];
 
   for (const e of elecciones) {
+    // §OVR-06: override de acento. No afecta a `silabasMetricas` ni a
+    // `fronterasSinalefa`; solo se valida y se clasifica.
+    if (e.tipo === "acento") {
+      const palabra = palabras[e.palabraA];
+      const silaba = e.silaba;
+      const valida =
+        e.palabraA === e.palabraB &&
+        palabra !== undefined &&
+        silaba !== undefined &&
+        Number.isInteger(silaba) &&
+        silaba >= 0 &&
+        silaba < silabear(palabra).length;
+      if (valida) aplicadas.push(e);
+      else huerfanas.push(e);
+      continue;
+    }
+
     const k = clave(e.tipo, e.palabraA, e.palabraB);
     if (!indice.has(k)) {
       huerfanas.push(e);

@@ -366,7 +366,7 @@ export function unidadesMetricas(
  * negativo en `unidadesMetricas`, así que aquí basta con marcar la sílaba
  * plana como tónica).
  */
-function tonicasPorSilaba(verso: string): boolean[] {
+function tonicasPorSilaba(escansion: Escansion, verso: string): boolean[] {
   const palabras = partirPalabras(verso);
   const out: boolean[] = [];
   const ultima = palabras.length - 1;
@@ -390,6 +390,28 @@ function tonicasPorSilaba(verso: string): boolean[] {
       out.push(!atono && tonica);
     }
   }
+
+  // §OVR-06: overrides de acento, aplicados DESPUÉS del criterio léxico
+  // (ACE-02..ACE-06 + ACE-05 + ACE-05b). "aplicar" fuerza tónica,
+  // "no-aplicar" fuerza átona, sobre la sílaba concreta.
+  const inicioPalabra: number[] = [];
+  let total = 0;
+  for (const p of palabras) {
+    inicioPalabra.push(total);
+    total += silabear(p).length;
+  }
+  for (const e of escansion.eleccionesAplicadas) {
+    if (e.tipo !== "acento") continue;
+    if (e.palabraA !== e.palabraB) continue;
+    const silaba = e.silaba;
+    if (silaba === undefined) continue;
+    const inicio = inicioPalabra[e.palabraA];
+    if (inicio === undefined) continue;
+    const idx = inicio + silaba;
+    if (idx < 0 || idx >= out.length) continue;
+    out[idx] = e.valor === "aplicar";
+  }
+
   return out;
 }
 
@@ -404,7 +426,7 @@ function tonicasPorSilaba(verso: string): boolean[] {
  */
 function construirPatron(escansion: Escansion, verso: string): ("T" | "a")[] {
   const unidades = unidadesMetricas(escansion, verso);
-  const tonicas = tonicasPorSilaba(verso);
+  const tonicas = tonicasPorSilaba(escansion, verso);
 
   const patron: ("T" | "a")[] = [];
   for (const u of unidades) {
@@ -430,7 +452,7 @@ function posicionesTonicas(
   verso: string,
 ): number[] {
   const unidades = unidadesMetricas(escansion, verso);
-  const tonicas = tonicasPorSilaba(verso);
+  const tonicas = tonicasPorSilaba(escansion, verso);
 
   const posiciones: number[] = [];
   for (let u = 0; u < unidades.length; u++) {
