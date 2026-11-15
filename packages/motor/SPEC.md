@@ -40,6 +40,7 @@ Este documento es el contrato del motor. Si una regla no está aquí, no se impl
 - RIM-09 (D13): añadida evidencia de polivalencia *ui/iu* ([NE2] cap. VIII).
 - COM-04 (D14): añadida nota sobre cesura en interior de palabra (tmesis) ([NE2] caps. X y XI).
 - Sección 11: añadidos 8 casos de prueba nuevos.
+- OVR-06: añadido override de acento (aplicar/no-aplicar por sílaba), con nota y casos de prueba.
 - Sección 12: añadida nota sobre rimas extrasistemáticas (rima en caída, rima potencial).
 
 ---
@@ -202,7 +203,7 @@ El motor produce un **ejemplo de verso** (la escansión propuesta). Los **overri
 | RIM-09 | Diptongos *ui / iu* en asonancia (*viuda*, *cuida*): son polivalentes, pueden asonar en una u otra vocal. Se trata como override o como opción. [DC 7.1.2, n. 89, p. 113] Ver D13. | — | `pendiente` |
 | RIM-10 | La rima refleja la pronunciación de la época. El motor usa la pronunciación moderna y no aplica distinciones fonéticas antiguas. [DC 7.1.1, pp. 104-105] | — | `propuesta` |
 | RIM-11 | Equivalencias dependientes de la variedad (seseo, yeísmo): ver D1. | — | `pendiente` |
-| RIM-12 | La rima usa el **acento efectivo** del último verso, incluyendo un override de acento del usuario (diástole, sístole). | — | `propuesta` |
+| RIM-12 | La rima usa el **acento efectivo** del último verso, incluyendo un override de acento del usuario (diástole, sístole). En v1 el override de acento (OVR-06) **no** modifica la rima; la integración queda para v2. | — | `propuesta` |
 | RIM-13 | El esquema se expresa con letras por verso (ABBA). Los versos sin pareja se marcan como sueltos. Tipos de estrofa: fuera de alcance de la v1. | — | `propuesta` |
 
 ### Nota sobre RIM-08
@@ -222,9 +223,13 @@ La equivalencia i/e, u/o es una convención **normativa**, no una descripción f
 | OVR-03 | Prioridad: override del usuario, luego regla del SPEC. | `propuesta` |
 | OVR-04 | Los overrides nunca modifican el texto original. | `decidida` |
 | OVR-05 | Las elecciones de sinéresis/diéresis se anclan solo a la palabra. La sinéresis se aplica al último par de vocales en hiato de la palabra; la diéresis, al primer diptongo. Tras la diéresis, la tónica queda en la mitad con la vocal tónica de la palabra. Anclaje exacto: fuera de v1. | `propuesta` |
+| OVR-06 | **Override de acento**: elección `{ tipo: "acento", palabraA, palabraB (ambas = índice de palabra, base 0), silaba (índice de sílaba dentro de la palabra, base 0), valor }`. `"aplicar"`: esa sílaba es tónica. `"no-aplicar"`: esa sílaba es átona. Se aplican sobre el acento léxico (ACE-02 a ACE-06) y priman sobre ACE-05 y ACE-05b (OVR-03). Mover una tónica = un `"no-aplicar"` en la antigua y un `"aplicar"` en la nueva. Una elección con palabra o sílaba fuera de rango es huérfana. En v1 solo afecta a patrón y posicionesTonicas: no modifica el cómputo (COM-02) ni la rima. | `propuesta` |
 
 ### Nota sobre OVR-01 y OVR-02
 El fundamento teórico está en el cuadro de Jakobson (ver nota en ALC-04). El motor produce un *ejemplo de verso*; los overrides permiten adoptar un *modelo de ejecución* distinto. Por eso se anclan a la palabra y su ocurrencia: el modelo de ejecución es una decisión del lector sobre palabras concretas.
+
+### Nota sobre OVR-06
+OVR-06 es la materialización de ACE-08: el motor calcula solo el acento normal, y los fenómenos rítmicos (sístole, diástole, doble acentuación, acentuación de monosílabos, desacentuación) se expresan como overrides de acento. La elección usa `palabraA` y `palabraB` con el mismo valor (índice de palabra, base 0) para mantener la forma común de `Eleccion`; `silaba` es el índice dentro de `silabear(palabra)`. La prioridad de OVR-03 se aplica en dos niveles: primero sobre el acento léxico (ACE-02 a ACE-06), y luego sobre las excepciones de monosílabos (ACE-05, ACE-05b), de modo que un `"no-aplicar"` puede desacentuar el monosílabo final del verso. En v1 el override no altera COM-02 ni la rima: la consecuencia sobre RIM-12 (acento efectivo) queda para v2.
 
 ---
 
@@ -283,6 +288,9 @@ Las pruebas que salgan de aquí deben llevar el ID de la regla en su nombre (por
 | *cruel* (bisílabo) | 2 sílabas (cru-el) | LIC-08 | [NE1] cap. VII, p. 121 |
 | *Sobre el caro despojo esta urna cincelo* | 13 sílabas (so-breel-ca-ro-des-po-joes-ta-ur-na-cin-ce-lo) | LIC-01, LIC-02 | [NE1] cap. IX, p. 136 |
 | *viborás* (por *víboras*) | Acento desplazado a la última sílaba | ACE-08, OVR-01 | [NE1] cap. XI, p. 156 |
+| *víboras* con override `{ tipo: "acento", palabraA: 0, palabraB: 0, silaba: 2, valor: "aplicar" }` y `{ ..., silaba: 0, valor: "no-aplicar" }` | Patrón `a a T`; posicionesTonicas `[3]`; cómputo y rima sin cambios | OVR-06, ACE-08 | — |
+| *el* (monosílabo final) con override `{ tipo: "acento", palabraA: 0, palabraB: 0, silaba: 0, valor: "no-aplicar" }` | Patrón `a`; posicionesTonicas `[]`; cómputo sin cambios | OVR-06, ACE-05b | — |
+| *víboras* con override `{ ..., silaba: 5, valor: "aplicar" }` | Elección huérfana (sílaba fuera de rango); patrón léxico sin cambios | OVR-06 | — |
 | *Una noche, / una noche / toda llena / de perfumes...* | 4+4+4+4 sílabas, acentos en 3.ª de cada grupo → patrón tetrasílabo con confianza alta | RIT-04, RIT-07 | [NE2] cap. X, pp. 176-177 |
 | *Inclitas razas ubérrimas, sangre de Hispania fecunda* | 17 sílabas (7+10), acentos en 1, 4, 7, 10, 13, 16 → heptadecasílabo dactílico | RIT-04 | [NE2] cap. X, p. 184 |
 | *La princesa está triste. ¿Qué tendrá la princesa?* | 14 sílabas (7+7), acentos en 3 y 6 de cada hemistiquio → alejandrino anapéstico | RIT-04 | [NE2] cap. II, p. 21 |
