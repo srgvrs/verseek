@@ -1,4 +1,4 @@
-import { montarEditor, setMetricas } from "./editor";
+import { montarEditor, setMetricas, setTonicas } from "./editor";
 import type {
   MensajeEntrada,
   MensajeSalida,
@@ -50,16 +50,29 @@ worker.addEventListener("message", (ev: MessageEvent<MensajeSalida>) => {
   if (msg.seq < ultimoSeqEnviado) return;
 
   const metricas = new Map<number, number>();
+  const tonicas = new Map<
+    number,
+    ReadonlyArray<{ inicio: number; fin: number }>
+  >();
   for (const r of msg.versos) {
     if ("error" in r) {
       console.warn(`verso ${r.id}: ${r.error}`);
       continue;
     }
     const c = r.analisis.computo;
-    if (c === null) continue;
-    metricas.set(r.id, c.silabasMetricas);
+    if (c !== null) {
+      metricas.set(r.id, c.silabasMetricas);
+    }
+    const rangos: { inicio: number; fin: number }[] = [];
+    for (const s of r.analisis.silabas) {
+      if (!s.tonica) continue;
+      rangos.push({ inicio: s.inicio, fin: s.fin });
+    }
+    tonicas.set(r.id, rangos);
   }
-  view.dispatch({ effects: setMetricas.of(metricas) });
+  view.dispatch({
+    effects: [setMetricas.of(metricas), setTonicas.of(tonicas)],
+  });
 });
 
 view = montarEditor(app, programarAnalisis);

@@ -12,6 +12,15 @@ import {
  */
 export const setMetricas = StateEffect.define<ReadonlyMap<number, number>>();
 
+/**
+ * Efecto que reemplaza los rangos de sílabas tónicas por línea.
+ * Clave: nº de línea (0-based). Valor: rangos relativos al verso
+ * (`inicio`/`fin` con `fin` exclusivo) de las sílabas tónicas.
+ */
+export const setTonicas = StateEffect.define<
+  ReadonlyMap<number, ReadonlyArray<{ inicio: number; fin: number }>>
+>();
+
 class MetricaWidget extends WidgetType {
   constructor(readonly n: number) {
     super();
@@ -56,6 +65,35 @@ const campoMetricas = StateField.define<DecorationSet>({
   provide: (f) => EditorView.decorations.from(f),
 });
 
+const marcaTonica = Decoration.mark({ class: "cm-tonica" });
+
+const campoTonicas = StateField.define<DecorationSet>({
+  create: () => Decoration.none,
+  update(deco, tr) {
+    let next = deco.map(tr.changes);
+    for (const e of tr.effects) {
+      if (!e.is(setTonicas)) continue;
+      const doc = tr.state.doc;
+      const marcas: Range<Decoration>[] = [];
+      for (const [linea, rangos] of e.value) {
+        if (linea < 0 || linea >= doc.lines) continue;
+        const line = doc.line(linea + 1);
+        for (const r of rangos) {
+          const from = line.from + r.inicio;
+          const to = line.from + r.fin;
+          if (from >= to) continue;
+          if (from < line.from || to > line.to) continue;
+          marcas.push(marcaTonica.range(from, to));
+        }
+      }
+      marcas.sort((a, b) => a.from - b.from || a.to - b.to);
+      next = Decoration.set(marcas, true);
+    }
+    return next;
+  },
+  provide: (f) => EditorView.decorations.from(f),
+});
+
 /**
  * Monta un editor CodeMirror 6 a pantalla completa dentro de `contenedor`.
  * `alCambiar` se invoca en cada transacción que modifique el documento
@@ -71,6 +109,7 @@ export function montarEditor(
     extensions: [
       basicSetup,
       campoMetricas,
+      campoTonicas,
       EditorView.updateListener.of((u) => {
         if (u.docChanged) alCambiar?.();
       }),
@@ -91,6 +130,12 @@ export function montarEditor(
           color: "#888",
           fontSize: "0.85em",
           userSelect: "none",
+        },
+        ".cm-tonica": {
+          backgroundColor: "rgba(255, 214, 102, 0.35)",
+          textDecoration: "underline",
+          textDecorationColor: "rgba(180, 120, 0, 0.6)",
+          textUnderlineOffset: "2px",
         },
       }),
     ],
