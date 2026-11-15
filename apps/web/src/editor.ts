@@ -1,6 +1,10 @@
 import { EditorView, basicSetup } from "codemirror";
 import { StateEffect, StateField } from "@codemirror/state";
-import { Decoration, type DecorationSet } from "@codemirror/view";
+import {
+  Decoration,
+  WidgetType,
+  type DecorationSet,
+} from "@codemirror/view";
 
 /**
  * Efecto que reemplaza el mapa de métricas por línea.
@@ -8,19 +12,29 @@ import { Decoration, type DecorationSet } from "@codemirror/view";
  */
 export const setMetricas = StateEffect.define<ReadonlyMap<number, number>>();
 
+class MetricaWidget extends WidgetType {
+  constructor(readonly n: number) {
+    super();
+  }
+
+  eq(otro: WidgetType): boolean {
+    return otro instanceof MetricaWidget && otro.n === this.n;
+  }
+
+  toDOM(): HTMLElement {
+    const span = document.createElement("span");
+    span.className = "cm-metrica";
+    span.textContent = ` ${this.n}`;
+    return span;
+  }
+
+  ignoreEvent(): boolean {
+    return true;
+  }
+}
+
 const widgetMetrica = (n: number): Decoration =>
-  Decoration.widget({
-    widget: {
-      toDOM() {
-        const span = document.createElement("span");
-        span.className = "cm-metrica";
-        span.textContent = ` ${n}`;
-        return span;
-      },
-      ignoreEvent: () => true,
-    },
-    side: 1,
-  });
+  Decoration.widget({ widget: new MetricaWidget(n), side: 1 });
 
 const campoMetricas = StateField.define<DecorationSet>({
   create: () => Decoration.none,
@@ -31,7 +45,7 @@ const campoMetricas = StateField.define<DecorationSet>({
       const widgets: Decoration[] = [];
       const doc = tr.state.doc;
       for (const [linea, n] of e.value) {
-        if (linea < 1 || linea > doc.lines) continue;
+        if (linea < 0 || linea >= doc.lines) continue;
         const line = doc.line(linea + 1);
         widgets.push(widgetMetrica(n).range(line.to));
       }
