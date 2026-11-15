@@ -179,6 +179,7 @@ El motor produce un **ejemplo de verso** (la escansión propuesta). Los **overri
 | RIT-06 | Endecasílabo: yámbico si lleva acento en la 6.ª, o en la 4.ª y la 8.ª. Dactílico si lleva acento en la 4.ª y la 7.ª. [DC 5.3, p. 85] | `decidida` |
 | RIT-07 | La etiqueta lleva una confianza. Cómo se calcula y qué umbrales se usan: ver D10. | `pendiente` |
 | RIT-08 | En versos silábicos (por ejemplo octosílabos) la etiqueta es solo informativa. | `decidida` |
+| RIT-09 | El campo `tonicas` de la salida contiene las posiciones (1-based, sobre sílabas métricas) de las sílabas con acento léxico según ACE-01 a ACE-06, incluidos los overrides de acento de OVR-06. No incluye acentos rítmicos (RIT-02, RIT-06) salvo que coincidan con una tónica léxica. La etiqueta de patrón (RIT-03 a RIT-06) y la confianza (RIT-07) son campos separados y no alteran `tonicas`. | `propuesta` |
 
 ### Evidencia para RIT-07
 [NE1] cap. I (El hada manzana, p. 21) clasifica los versos en dactílico, anfibráquico, anapéstico, yámbico, compuesto, trocaico y **dudoso**. La categoría "dudoso" se aplica al verso 20, que "puede entenderse como dodecasílabo de problemática definición: anfibráquico con ruptura del ritmo por acentuar en la sílaba 9.ª en lugar de en la 8.ª". Es un precedente útil para la escala de confianza.
