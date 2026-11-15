@@ -356,7 +356,7 @@ export function unidadesMetricas(
  * negativo en `unidadesMetricas`, así que aquí basta con marcar la sílaba
  * plana como tónica).
  */
-function tonicasPorSilaba(escansion: Escansion, verso: string): boolean[] {
+export function tonicasPorSilaba(escansion: Escansion, verso: string): boolean[] {
   const palabras = partirPalabras(verso);
   const out: boolean[] = [];
   const ultima = palabras.length - 1;
