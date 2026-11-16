@@ -115,6 +115,23 @@ que la daba por cerrada.
 - `SPEC.propuesta.md` §7 (S-61…S-67) y contratos públicos actualizados.
 - `index.ts` reexporta `computar` y `Computo`.
 
+### Added (UI Fase 3, 2026-11-15)
+
+Verificado a mano en el navegador; sin tests automáticos en `apps/web`.
+
+- **Resaltado de la sílaba tónica** de cada palabra (`setTonicas`, `StateField`
+  propio en `apps/web/src/editor.ts`), a partir de
+  `analisis.silabas[].tonica`. Verificado: monosílabos átonos sin resaltar,
+  monosílabo final tónico, dos tónicas en adverbios en `-mente`.
+- **Panel de candidatos de licencia** del verso donde está el cursor
+  (`apps/web/src/panel.ts`): tipo, palabras implicadas, sílabas y estado
+  activo/inactivo.
+- **Candidatos clicables** con estado de elecciones en memoria
+  (`apps/web/src/estado.ts`, `Map<versoId, Eleccion[]>`). Sinalefa y hiato
+  alternan por frontera; sinéresis y diéresis alternan aplicar/no-aplicar.
+- Verificado a mano: *Faetón* con sinéresis 12 → 11; *suave brilla el ruido*
+  con hiato 6 → 7, con diéresis añadida 8, y al volver a la sinalefa 6.
+
 ### Added (ritmo)
 - `packages/motor/src/ritmo.ts`: `analizarRitmo(escansion, verso)` construye el
   patrón de acentos (`"T"` / `"a"`) por sílaba métrica, expone las posiciones

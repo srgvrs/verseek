@@ -109,6 +109,33 @@ Pendiente para cerrar la Fase 3: conectar el Worker con `@verseek/motor`,
 añadir debounce, decoraciones por verso/sílaba y el `Map` de elecciones en
 `estado.ts`.
 
+### Hecho (2026-11-15)
+
+- **Resaltar tónicas**: sílaba tónica de cada palabra resaltada
+  (`setTonicas`, `StateField` propio en `editor.ts`), a partir de
+  `analisis.silabas[].tonica`.
+- **Mostrar candidatos**: panel de candidatos de licencia del verso donde
+  está el cursor (`panel.ts`): tipo, palabras implicadas, sílabas y estado
+  activo/inactivo.
+- **Candidatos clicables**: estado de elecciones en memoria
+  (`estado.ts`, `Map<versoId, Eleccion[]>`). Sinalefa y hiato alternan por
+  frontera; sinéresis y diéresis alternan aplicar/no-aplicar.
+
+### Pendiente de Fase 3 (2026-11-15)
+
+- **UI para override de acento** (OVR-06).
+- **Mostrar sílabas separadas**.
+
+### Limitaciones conocidas de la UI (2026-11-15)
+
+- Tras cada clic se reanalizan todos los versos, no solo el modificado.
+- Las elecciones se indexan por número de línea: al insertar o borrar líneas
+  se desplazan al verso equivocado (anclaje robusto = fase 4).
+- Con sinéresis/diéresis, `silabas[]` son sílabas escritas, no métricas
+  (OVR-05); el resaltado marca la sílaba escrita tónica.
+- `ü` escrita no activa diéresis automáticamente (D11 pendiente).
+- No hay tests automáticos en `apps/web`; la UI está verificada solo a mano.
+
 ## Siguiente sesión: cerrar Fase 2 y luego Fase 3 (Editor Web)
 
 Antes de la Fase 3, cerrar los pendientes de la Fase 2 listados arriba
