@@ -1,14 +1,17 @@
-import type { CandidatoAnalizado } from "@verseek/motor";
+import type { AnalisisVerso, CandidatoAnalizado } from "@verseek/motor";
 
 export interface Panel {
-  actualizar(candidatos: readonly CandidatoAnalizado[] | null): void;
+  actualizar(analisis: AnalisisVerso | null): void;
 }
 
 /**
- * Crea un panel de solo lectura, fijo en la parte inferior de la ventana,
- * que muestra los candidatos de licencia del verso bajo el cursor.
+ * Crea un panel fijo en la parte inferior de la ventana que muestra los
+ * candidatos de licencia del verso bajo el cursor. Cada candidato es un
+ * botón que invoca `alClicar` para alternar su estado.
  */
-export function crearPanel(): Panel {
+export function crearPanel(
+  alClicar: (c: CandidatoAnalizado) => void,
+): Panel {
   const contenedor = document.createElement("div");
   contenedor.id = "panel-candidatos";
   contenedor.style.position = "fixed";
@@ -28,22 +31,36 @@ export function crearPanel(): Panel {
   contenedor.style.zIndex = "10";
   document.body.appendChild(contenedor);
 
-  function actualizar(candidatos: readonly CandidatoAnalizado[] | null): void {
+  function actualizar(analisis: AnalisisVerso | null): void {
     contenedor.textContent = "";
-    if (candidatos === null || candidatos.length === 0) {
+    const candidatos = analisis?.candidatos ?? null;
+    if (analisis === null || candidatos === null || candidatos.length === 0) {
       const vacio = document.createElement("div");
       vacio.textContent = "Sin candidatos";
       contenedor.appendChild(vacio);
       return;
     }
+    const palabras = analisis.palabras;
     for (const c of candidatos) {
-      const linea = document.createElement("div");
-      const texto = `${c.tipo}: ${c.silabaA} + ${c.silabaB} (${c.silabasSin} -> ${c.silabasCon})`;
-      linea.textContent = c.activo ? `● ${texto}` : texto;
+      const boton = document.createElement("button");
+      boton.type = "button";
+      boton.style.display = "block";
+      boton.style.width = "100%";
+      boton.style.textAlign = "left";
+      boton.style.background = "transparent";
+      boton.style.border = "none";
+      boton.style.padding = "0.1rem 0";
+      boton.style.font = "inherit";
+      boton.style.cursor = "pointer";
+      const textoA = palabras[c.palabraA]?.texto ?? "";
+      const textoB = palabras[c.palabraB]?.texto ?? "";
+      const texto = `${c.tipo}: ${textoA} + ${textoB} — ${c.silabaA} + ${c.silabaB} (${c.silabasSin} -> ${c.silabasCon})`;
+      boton.textContent = c.activo ? `● ${texto}` : texto;
       if (c.activo) {
-        linea.style.fontWeight = "bold";
+        boton.style.fontWeight = "bold";
       }
-      contenedor.appendChild(linea);
+      boton.addEventListener("click", () => alClicar(c));
+      contenedor.appendChild(boton);
     }
   }
 

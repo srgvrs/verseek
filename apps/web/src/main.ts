@@ -1,6 +1,7 @@
 import { montarEditor, setMetricas, setTonicas } from "./editor";
 import { crearPanel } from "./panel";
-import type { AnalisisVerso } from "@verseek/motor";
+import { alternarCandidato, eleccionesDe } from "./estado";
+import type { AnalisisVerso, CandidatoAnalizado } from "@verseek/motor";
 import type {
   MensajeEntrada,
   MensajeSalida,
@@ -25,14 +26,19 @@ let seq = 0;
 let ultimoSeqEnviado = -1;
 let timer: ReturnType<typeof setTimeout> | null = null;
 
-const panel = crearPanel();
+function lineaDelCursor(): number {
+  return view.state.doc.lineAt(view.state.selection.main.head).number - 1;
+}
+
+const panel = crearPanel((c: CandidatoAnalizado) => {
+  alternarCandidato(lineaDelCursor(), c);
+  enviarAnalisis();
+});
 const analisisPorId = new Map<number, AnalisisVerso>();
 
 function refrescarPanel(): void {
-  const linea =
-    view.state.doc.lineAt(view.state.selection.main.head).number - 1;
-  const analisis = analisisPorId.get(linea);
-  panel.actualizar(analisis?.candidatos ?? null);
+  const analisis = analisisPorId.get(lineaDelCursor());
+  panel.actualizar(analisis ?? null);
 }
 
 function enviarAnalisis(): void {
@@ -40,7 +46,7 @@ function enviarAnalisis(): void {
   const versos: VersoEntrada[] = lineas.map((texto, id) => ({
     id,
     texto,
-    elecciones: [],
+    elecciones: eleccionesDe(id),
   }));
   seq += 1;
   ultimoSeqEnviado = seq;
