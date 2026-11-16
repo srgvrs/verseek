@@ -4,23 +4,21 @@ import { resolverEscansion } from "../src/escansion.js";
 import { analizarRitmo, unidadesMetricas } from "../src/ritmo.js";
 
 describe("analizarRitmo", () => {
-  it("verso vacío: patrón vacío, sin-patron", () => {
+  it("verso vacío: patrón vacío, indeterminado", () => {
     const esc = resolverEscansion("", []);
     const r = analizarRitmo(esc, "");
     expect(r.patron).toEqual([]);
     expect(r.posicionesTonicas).toEqual([]);
-    expect(r.etiqueta).toBe("sin-patron");
+    expect(r.etiqueta).toBe("indeterminado");
     expect(r.confianza).toBe(0);
-    expect(r.nivel).toBe("sin-patron");
   });
 
-  it("monosílabo: una sola tónica, sin-patron", () => {
+  it("monosílabo: una sola tónica, indeterminado", () => {
     const esc = resolverEscansion("sol", []);
     const r = analizarRitmo(esc, "sol");
     expect(r.patron).toEqual(["T"]);
     expect(r.posicionesTonicas).toEqual([1]);
-    expect(r.etiqueta).toBe("sin-patron");
-    expect(r.nivel).toBe("sin-patron");
+    expect(r.etiqueta).toBe("indeterminado");
   });
 
   it("'casa': llana, tónica en 1, patrón T-a", () => {
@@ -46,7 +44,7 @@ describe("analizarRitmo", () => {
     expect(r.posicionesTonicas).toEqual([1]);
   });
 
-  it("'la aurora' sin sinalefa: tónica en 3 → sin-patron (una sola tónica)", () => {
+  it("'la aurora' sin sinalefa: tónica en 3 → trocaico (una sola tónica)", () => {
     const esc = resolverEscansion("la aurora", [
       { tipo: "sinalefa", palabraA: 0, palabraB: 1, valor: "no-aplicar" },
     ]);
@@ -54,12 +52,13 @@ describe("analizarRitmo", () => {
     // Unidades: [la] [au] [ro] [ra] → tónica en 3 (ro).
     expect(r.patron).toEqual(["a", "a", "T", "a"]);
     expect(r.posicionesTonicas).toEqual([3]);
-    // Una sola tónica libre (RIT-07): sin-patron, nivel sin-patron.
-    expect(r.etiqueta).toBe("sin-patron");
-    expect(r.nivel).toBe("sin-patron");
+    // Una sola tónica (deltas vacío): paridad de la última tónica (3, impar)
+    // → trocaico, con confianza baja.
+    expect(r.etiqueta).toBe("trocaico");
+    expect(r.confianza).toBe(0.4);
   });
 
-  it("'la aurora' con sinalefa: tónica en 2 → sin-patron (una sola tónica)", () => {
+  it("'la aurora' con sinalefa: tónica en 2 → yambico (una sola tónica)", () => {
     const esc = resolverEscansion("la aurora", [
       { tipo: "sinalefa", palabraA: 0, palabraB: 1, valor: "aplicar" },
     ]);
@@ -67,9 +66,10 @@ describe("analizarRitmo", () => {
     // Unidades: [la‿au] [ro] [ra] → tónica en 2 (ro).
     expect(r.patron).toEqual(["a", "T", "a"]);
     expect(r.posicionesTonicas).toEqual([2]);
-    // Una sola tónica libre (RIT-07): sin-patron, nivel sin-patron.
-    expect(r.etiqueta).toBe("sin-patron");
-    expect(r.nivel).toBe("sin-patron");
+    // Una sola tónica (deltas vacío): paridad de la última tónica (2, par)
+    // → yambico, con confianza baja.
+    expect(r.etiqueta).toBe("yambico");
+    expect(r.confianza).toBe(0.4);
   });
 
   it("'la aurora' sin elecciones: 'ro' queda en posición 2 (sinalefa por defecto)", () => {
@@ -88,14 +88,12 @@ describe("analizarRitmo", () => {
     expect(r.posicionesTonicas).toEqual([3]);
   });
 
-  it("'en un lugar': tónicas en 1 y 3 → sin-patron (una sola tónica libre)", () => {
+  it("'en un lugar': tónicas en 1 y 3 → yámbico (última impar)", () => {
     const esc = resolverEscansion("en un lugar", []);
     const r = analizarRitmo(esc, "en un lugar");
     // en(T) un(T) lu-gar(T) → T-T-T-a
     expect(r.posicionesTonicas.length).toBeGreaterThan(0);
-    // Solo hay una tónica libre (RIT-07): sin-patron.
-    expect(r.etiqueta).toBe("sin-patron");
-    expect(r.nivel).toBe("sin-patron");
+    expect(r.etiqueta).toBe("yambico");
   });
 
   it("'dígaselo': sobresdrújula, tónica en 1, patrón T-a", () => {
@@ -113,31 +111,27 @@ describe("analizarRitmo", () => {
     expect(r.patron[0]).toBe("T");
   });
 
-  it("patrón ternario: 'cántame la nana' → etiqueta válida", () => {
+  it("patrón ternario: 'cántame la nana' → dactílico o mixto", () => {
     const esc = resolverEscansion("cántame la nana", []);
     const r = analizarRitmo(esc, "cántame la nana");
     expect([
       "dactilico",
-      "anfibraquico",
       "anapestico",
-      "yambico",
+      "mixto",
+      "indeterminado",
       "trocaico",
-      "sin-patron",
     ]).toContain(r.etiqueta);
     expect(r.confianza).toBeGreaterThanOrEqual(0);
     expect(r.confianza).toBeLessThanOrEqual(1);
   });
 
-  it("confianza siempre en [0, 1] y nivel válido", () => {
+  it("confianza siempre en [0, 1]", () => {
     const versos = ["sol", "casa", "corazón", "la aurora", "en un lugar"];
     for (const v of versos) {
       const esc = resolverEscansion(v, []);
       const r = analizarRitmo(esc, v);
       expect(r.confianza).toBeGreaterThanOrEqual(0);
       expect(r.confianza).toBeLessThanOrEqual(1);
-      expect(["alta", "media", "baja", "dudosa", "sin-patron"]).toContain(
-        r.nivel,
-      );
     }
   });
 
