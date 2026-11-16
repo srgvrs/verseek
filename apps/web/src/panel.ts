@@ -33,6 +33,38 @@ export function crearPanel(
 
   function actualizar(analisis: AnalisisVerso | null): void {
     contenedor.textContent = "";
+
+    const seccionRitmo = document.createElement("div");
+    seccionRitmo.style.marginBottom = "0.5rem";
+    const tituloRitmo = document.createElement("div");
+    tituloRitmo.textContent = "Ritmo";
+    tituloRitmo.style.fontWeight = "bold";
+    seccionRitmo.appendChild(tituloRitmo);
+
+    const ritmo = analisis?.ritmo ?? null;
+    if (ritmo === null) {
+      const sinRitmo = document.createElement("div");
+      sinRitmo.textContent = "Sin ritmo";
+      seccionRitmo.appendChild(sinRitmo);
+    } else {
+      const lineaPatron = document.createElement("div");
+      lineaPatron.textContent = `patrón: ${ritmo.patron.join("")}`;
+      seccionRitmo.appendChild(lineaPatron);
+
+      const lineaEtiqueta = document.createElement("div");
+      lineaEtiqueta.textContent = `etiqueta: ${ritmo.etiqueta}`;
+      seccionRitmo.appendChild(lineaEtiqueta);
+
+      const lineaConfianza = document.createElement("div");
+      lineaConfianza.textContent = `confianza: ${ritmo.confianza}`;
+      seccionRitmo.appendChild(lineaConfianza);
+
+      const lineaPosiciones = document.createElement("div");
+      lineaPosiciones.textContent = `posiciones tónicas: ${ritmo.posicionesTonicas.join(", ")}`;
+      seccionRitmo.appendChild(lineaPosiciones);
+    }
+    contenedor.appendChild(seccionRitmo);
+
     const candidatos = analisis?.candidatos ?? null;
     if (analisis === null || candidatos === null || candidatos.length === 0) {
       const vacio = document.createElement("div");
