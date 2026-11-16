@@ -526,7 +526,7 @@ function proporcion(
  * Deriva la etiqueta de ritmo a partir de las posiciones tónicas.
  * RIT-07, RIT-10, RIT-11.
  */
-function etiquetar(
+export function etiquetarPatron(
   posiciones: readonly number[],
   n: number,
 ): { etiqueta: EtiquetaRitmo; confianza: number; nivel: NivelConfianza } {
@@ -591,6 +591,6 @@ function etiquetar(
 export function analizarRitmo(escansion: Escansion, verso: string): Ritmo {
   const patron = construirPatron(escansion, verso);
   const posiciones = posicionesTonicas(escansion, verso);
-  const { etiqueta, confianza, nivel } = etiquetar(posiciones, patron.length);
+  const { etiqueta, confianza, nivel } = etiquetarPatron(posiciones, patron.length);
   return { patron, posicionesTonicas: posiciones, etiqueta, confianza, nivel };
 }
