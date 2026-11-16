@@ -102,6 +102,7 @@ const campoTonicas = StateField.define<DecorationSet>({
 export function montarEditor(
   contenedor: HTMLElement,
   alCambiar?: () => void,
+  alMoverCursor?: () => void,
 ): EditorView {
   const view = new EditorView({
     doc: "",
@@ -112,6 +113,7 @@ export function montarEditor(
       campoTonicas,
       EditorView.updateListener.of((u) => {
         if (u.docChanged) alCambiar?.();
+        if (u.selectionSet) alMoverCursor?.();
       }),
       EditorView.lineWrapping,
       EditorView.theme({

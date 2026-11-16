@@ -1,4 +1,6 @@
 import { montarEditor, setMetricas, setTonicas } from "./editor";
+import { crearPanel } from "./panel";
+import type { AnalisisVerso } from "@verseek/motor";
 import type {
   MensajeEntrada,
   MensajeSalida,
@@ -22,6 +24,16 @@ const worker = new Worker(
 let seq = 0;
 let ultimoSeqEnviado = -1;
 let timer: ReturnType<typeof setTimeout> | null = null;
+
+const panel = crearPanel();
+const analisisPorId = new Map<number, AnalisisVerso>();
+
+function refrescarPanel(): void {
+  const linea =
+    view.state.doc.lineAt(view.state.selection.main.head).number - 1;
+  const analisis = analisisPorId.get(linea);
+  panel.actualizar(analisis?.candidatos ?? null);
+}
 
 function enviarAnalisis(): void {
   const lineas = view.state.doc.toString().split("\n");
@@ -54,11 +66,13 @@ worker.addEventListener("message", (ev: MessageEvent<MensajeSalida>) => {
     number,
     ReadonlyArray<{ inicio: number; fin: number }>
   >();
+  analisisPorId.clear();
   for (const r of msg.versos) {
     if ("error" in r) {
       console.warn(`verso ${r.id}: ${r.error}`);
       continue;
     }
+    analisisPorId.set(r.id, r.analisis);
     const c = r.analisis.computo;
     if (c !== null) {
       metricas.set(r.id, c.silabasMetricas);
@@ -73,9 +87,10 @@ worker.addEventListener("message", (ev: MessageEvent<MensajeSalida>) => {
   view.dispatch({
     effects: [setMetricas.of(metricas), setTonicas.of(tonicas)],
   });
+  refrescarPanel();
 });
 
-view = montarEditor(app, programarAnalisis);
+view = montarEditor(app, programarAnalisis, refrescarPanel);
 
 programarAnalisis();
 console.log("verseek web — editor montado");
