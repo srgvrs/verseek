@@ -46,7 +46,6 @@ Este documento es el contrato del motor. Si una regla no está aquí, no se impl
 ### Registro de cambios v0.2 → v0.3
 
 - RIT-07: pasa de `pendiente` a `decidida`. La confianza se calcula como la proporción de tónicas **libres** del vector (RIT-01) —todas excepto la penúltima sílaba métrica (RIT-02)— que coinciden con el patrón propuesto. Si hay menos de 2 tónicas libres, la confianza es baja por datos insuficientes.
-- RIT-06: se restringe a versos de 11 sílabas métricas y se le da **precedencia** sobre la proporción: decide la etiqueta. La confianza se calcula con la proporción de RIT-07 respecto al patrón elegido.
 - Nueva regla RIT-10: formaliza la precedencia de RIT-06 y el cálculo de confianza sobre el patrón elegido.
 - Nueva regla RIT-11: elegibilidad de patrones por penúltima sílaba métrica. Un patrón solo es elegible si contiene la posición n-1. Si ninguno lo es, la etiqueta es `sin patrón`.
 - RIT-06: se restringe el texto original de [DC 5.3, p. 85] a su enunciado de fuente; la restricción a 11 sílabas métricas y la precedencia se trasladan a RIT-10.
@@ -303,7 +302,7 @@ Las pruebas que salgan de aquí deben llevar el ID de la regla en su nombre (por
 | *mi ditirambo brá / sileño es ditirambo* | 14 sílabas con tmesis en *brá/sileño* | COM-04 (v2), D14 | [NE2] cap. X, p. 173 |
 | *viuda* asonante en *ia* | Asonancia ambigua: puede asonar en *ia* o en *ua* | RIM-09, D13 | [NE2] cap. VIII, p. 160 |
 | *claramente* | 4 sílabas (cla-ra-men-te), dos tónicas: *cla* y *men*. Final llano, total métrico 4. | ACE-06, COM-02, RIT-01 | — |
-| *Feliciano me adora y le aborrezco* | 11 sílabas métricas; tónicas en 3, 6 y 10; yámbico por RIT-06; confianza media (1 de 2 tónicas libres en pares) | RIT-06, RIT-07, RIT-10 | — |
+| *Feliciano me adora y le aborrezco* | 11 sílabas métricas; tónicas en 3, 6 y 10; yámbico por RIT-06; confianza media (1 de 2 tónicas libres en pares) | RIT-06, RIT-07, RIT-10, RIT-11 | — |
 | *de súbito la ciudad* | 8 sílabas métricas; tónicas en 2 y 7; una sola tónica libre → confianza baja por datos insuficientes. Etiqueta trocaico (elegibles trocaico y dactílico, 0/1), confianza baja. | RIT-07, RIT-10, RIT-11 | — |
 | 8 sílabas, tónicas 3, 6, 7 | Trocaico, confianza media (1/2 libres); anapéstico, anfibráquico y yámbico descalificados por RIT-11. | RIT-11, RIT-07 | — (caso construido) |
 | 12 sílabas, tónicas 2, 5, 8, 11 | Anfibráquico, confianza alta (3/3 libres); yámbico descalificado. | RIT-11, RIT-07 | — (caso construido) |
