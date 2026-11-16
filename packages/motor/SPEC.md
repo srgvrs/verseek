@@ -56,6 +56,8 @@ Este documento es el contrato del motor. Si una regla no está aquí, no se impl
 - Sección 11: añadidos dos casos de prueba (endecasílabo yámbico con confianza media; octosílabo con una sola tónica libre y confianza baja).
 - Sección 11: la fila "de súbito la ciudad" pasa a `sin-patron` con nivel `baja` por una sola tónica libre (RIT-07); añadida fila "un verso con una sola tónica" → `sin-patron`, `baja` (caso construido).
 - Sección 11: el caso de 11 sílabas con tónicas 4, 6, 7, 10 queda como `pendiente a propósito`, con nota de que el código actual devuelve yámbico de forma provisional.
+- RIT-10: el umbral del 40 % de D10 se aplica también en 11 sílabas; si la proporción del patrón decidido por RIT-06 es inferior al 40 %, la etiqueta es `sin-patron` (nivel `sin-patron`).
+- RIT-10: nombre en interfaz de `sin-patron` = 'ritmo libre'; es solo texto de presentación, el identificador no cambia.
 
 ---
 
