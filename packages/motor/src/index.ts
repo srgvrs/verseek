@@ -1,4 +1,5 @@
 export type { ResultadoNormalizacion } from "./normalizar.js";
+export type { PalabraConOffsets } from "./palabras.js";
 export type { Silaba } from "./silabeo.js";
 export type { ResultadoAcento, TipoAcento } from "./acento.js";
 export type { Candidato, TipoLicencia } from "./licencias.js";

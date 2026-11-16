@@ -19,6 +19,9 @@ importers:
       '@codemirror/view':
         specifier: ^6.43.15
         version: 6.43.15
+      '@verseek/motor':
+        specifier: workspace:^
+        version: link:../../packages/motor
       codemirror:
         specifier: ^6.0.2
         version: 6.0.2
