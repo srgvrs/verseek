@@ -4,21 +4,23 @@ import { resolverEscansion } from "../src/escansion.js";
 import { analizarRitmo, unidadesMetricas } from "../src/ritmo.js";
 
 describe("analizarRitmo", () => {
-  it("verso vacío: patrón vacío, indeterminado", () => {
+  it("verso vacío: patrón vacío, sin-patron", () => {
     const esc = resolverEscansion("", []);
     const r = analizarRitmo(esc, "");
     expect(r.patron).toEqual([]);
     expect(r.posicionesTonicas).toEqual([]);
-    expect(r.etiqueta).toBe("indeterminado");
+    expect(r.etiqueta).toBe("sin-patron");
     expect(r.confianza).toBe(0);
+    expect(r.nivel).toBe("baja");
   });
 
-  it("monosílabo: una sola tónica, indeterminado", () => {
+  it("monosílabo: una sola tónica, sin-patron", () => {
     const esc = resolverEscansion("sol", []);
     const r = analizarRitmo(esc, "sol");
     expect(r.patron).toEqual(["T"]);
     expect(r.posicionesTonicas).toEqual([1]);
-    expect(r.etiqueta).toBe("indeterminado");
+    expect(r.etiqueta).toBe("sin-patron");
+    expect(r.nivel).toBe("baja");
   });
 
   it("'casa': llana, tónica en 1, patrón T-a", () => {
@@ -44,7 +46,7 @@ describe("analizarRitmo", () => {
     expect(r.posicionesTonicas).toEqual([1]);
   });
 
-  it("'la aurora' sin sinalefa: tónica en 3 → trocaico (una sola tónica)", () => {
+  it("'la aurora' sin sinalefa: una sola tónica libre → sin-patron", () => {
     const esc = resolverEscansion("la aurora", [
       { tipo: "sinalefa", palabraA: 0, palabraB: 1, valor: "no-aplicar" },
     ]);
@@ -52,13 +54,12 @@ describe("analizarRitmo", () => {
     // Unidades: [la] [au] [ro] [ra] → tónica en 3 (ro).
     expect(r.patron).toEqual(["a", "a", "T", "a"]);
     expect(r.posicionesTonicas).toEqual([3]);
-    // Una sola tónica (deltas vacío): paridad de la última tónica (3, impar)
-    // → trocaico, con confianza baja.
-    expect(r.etiqueta).toBe("trocaico");
-    expect(r.confianza).toBe(0.4);
+    // RIT-07: menos de 2 tónicas libres → sin-patron / baja.
+    expect(r.etiqueta).toBe("sin-patron");
+    expect(r.nivel).toBe("baja");
   });
 
-  it("'la aurora' con sinalefa: tónica en 2 → yambico (una sola tónica)", () => {
+  it("'la aurora' con sinalefa: una sola tónica libre → sin-patron", () => {
     const esc = resolverEscansion("la aurora", [
       { tipo: "sinalefa", palabraA: 0, palabraB: 1, valor: "aplicar" },
     ]);
@@ -66,10 +67,9 @@ describe("analizarRitmo", () => {
     // Unidades: [la‿au] [ro] [ra] → tónica en 2 (ro).
     expect(r.patron).toEqual(["a", "T", "a"]);
     expect(r.posicionesTonicas).toEqual([2]);
-    // Una sola tónica (deltas vacío): paridad de la última tónica (2, par)
-    // → yambico, con confianza baja.
-    expect(r.etiqueta).toBe("yambico");
-    expect(r.confianza).toBe(0.4);
+    // RIT-07: menos de 2 tónicas libres → sin-patron / baja.
+    expect(r.etiqueta).toBe("sin-patron");
+    expect(r.nivel).toBe("baja");
   });
 
   it("'la aurora' sin elecciones: 'ro' queda en posición 2 (sinalefa por defecto)", () => {
@@ -88,12 +88,13 @@ describe("analizarRitmo", () => {
     expect(r.posicionesTonicas).toEqual([3]);
   });
 
-  it("'en un lugar': tónicas en 1 y 3 → yámbico (última impar)", () => {
+  it("'en un lugar': tónicas en 1 y 3 → sin-patron (una sola tónica libre)", () => {
     const esc = resolverEscansion("en un lugar", []);
     const r = analizarRitmo(esc, "en un lugar");
-    // en(T) un(T) lu-gar(T) → T-T-T-a
+    // en(T) un(T) lu-gar(T) → T-T-T-a; libres = {1, 3} menos n-1=3 → {1}.
     expect(r.posicionesTonicas.length).toBeGreaterThan(0);
-    expect(r.etiqueta).toBe("yambico");
+    expect(r.etiqueta).toBe("sin-patron");
+    expect(r.nivel).toBe("baja");
   });
 
   it("'dígaselo': sobresdrújula, tónica en 1, patrón T-a", () => {
@@ -111,27 +112,29 @@ describe("analizarRitmo", () => {
     expect(r.patron[0]).toBe("T");
   });
 
-  it("patrón ternario: 'cántame la nana' → dactílico o mixto", () => {
+  it("patrón ternario: 'cántame la nana' → etiqueta válida", () => {
     const esc = resolverEscansion("cántame la nana", []);
     const r = analizarRitmo(esc, "cántame la nana");
     expect([
       "dactilico",
+      "anfibraquico",
       "anapestico",
-      "mixto",
-      "indeterminado",
       "trocaico",
+      "yambico",
+      "sin-patron",
     ]).toContain(r.etiqueta);
     expect(r.confianza).toBeGreaterThanOrEqual(0);
     expect(r.confianza).toBeLessThanOrEqual(1);
   });
 
-  it("confianza siempre en [0, 1]", () => {
+  it("confianza siempre en [0, 1] y nivel válido", () => {
     const versos = ["sol", "casa", "corazón", "la aurora", "en un lugar"];
     for (const v of versos) {
       const esc = resolverEscansion(v, []);
       const r = analizarRitmo(esc, v);
       expect(r.confianza).toBeGreaterThanOrEqual(0);
       expect(r.confianza).toBeLessThanOrEqual(1);
+      expect(["alta", "media", "baja", "dudosa", "sin-patron"]).toContain(r.nivel);
     }
   });
 
@@ -221,6 +224,8 @@ describe("analizarRitmo", () => {
     const r = analizarRitmo(esc, "dime lo que");
     // di-me lo que → tónicas en 1 (di) y 4 (que, por ACE-05b).
     expect(r.posicionesTonicas).toEqual([1, 4]);
+    // RIT-07: libres = {1} (4 = n-1) → sin-patron.
+    expect(r.etiqueta).toBe("sin-patron");
   });
 
   it("ACE-05b: 'que dime lo' — 'que' inicial átono, 'lo' final tónico", () => {
@@ -228,6 +233,8 @@ describe("analizarRitmo", () => {
     const r = analizarRitmo(esc, "que dime lo");
     // que di-me lo → tónicas en 2 (di) y 4 (lo, por ACE-05b).
     expect(r.posicionesTonicas).toEqual([2, 4]);
+    // RIT-07: libres = {2} (4 = n-1) → sin-patron.
+    expect(r.etiqueta).toBe("sin-patron");
   });
 
   it("ACE-06: 'y las horas se van pausadamente' — dos tónicas en el adverbio", () => {
@@ -236,6 +243,8 @@ describe("analizarRitmo", () => {
     // y las ho-ras se van pau-sa-da-men-te
     // tónicas: ho (3), ra (6), da (8, base) y men (10, ACE-06).
     expect(r.posicionesTonicas).toEqual([3, 6, 8, 10]);
+    // RIT-07: libres = {3, 6, 8} (10 = n-1) → hay 3 libres, se evalúa.
+    expect(r.etiqueta).not.toBe("sin-patron");
   });
 
   it("ACE-06: 'lentamente' — tónicas en la base y en 'men'", () => {
@@ -243,6 +252,8 @@ describe("analizarRitmo", () => {
     const r = analizarRitmo(esc, "lentamente");
     // len-ta-men-te → tónicas en 1 (len, base) y 3 (men, ACE-06).
     expect(r.posicionesTonicas).toEqual([1, 3]);
+    // RIT-07: libres = {1} (3 = n-1) → sin-patron.
+    expect(r.etiqueta).toBe("sin-patron");
   });
 
   it("ACE-06: 'demente' — no duplica la tónica de 'men'", () => {
@@ -251,12 +262,16 @@ describe("analizarRitmo", () => {
     // de-men-te → tónica en 2 (men). La base "de" no aporta tónica extra
     // y la penúltima ya es "men", así que no se duplica.
     expect(r.posicionesTonicas).toEqual([2]);
+    // RIT-07: libres = {} (2 = n-1) → sin-patron.
+    expect(r.etiqueta).toBe("sin-patron");
   });
 
   it("OVR-06: 'casa blanca' sin elecciones → [1, 3]", () => {
     const esc = resolverEscansion("casa blanca", []);
     const r = analizarRitmo(esc, "casa blanca");
     expect(r.posicionesTonicas).toEqual([1, 3]);
+    // RIT-07: libres = {1} (3 = n-1) → sin-patron.
+    expect(r.etiqueta).toBe("sin-patron");
   });
 
   it("OVR-06: 'casa blanca' acento aplicar (0, 1) → [1, 2, 3]", () => {
@@ -265,6 +280,8 @@ describe("analizarRitmo", () => {
     ]);
     const r = analizarRitmo(esc, "casa blanca");
     expect(r.posicionesTonicas).toEqual([1, 2, 3]);
+    // RIT-07: libres = {1, 2} (3 = n-1) → hay 2 libres, se evalúa.
+    expect(r.etiqueta).not.toBe("sin-patron");
   });
 
   it("OVR-06: 'casa blanca' acento no-aplicar (0, 0) → [3]", () => {
@@ -273,6 +290,8 @@ describe("analizarRitmo", () => {
     ]);
     const r = analizarRitmo(esc, "casa blanca");
     expect(r.posicionesTonicas).toEqual([3]);
+    // RIT-07: libres = {} (3 = n-1) → sin-patron.
+    expect(r.etiqueta).toBe("sin-patron");
   });
 
   it("OVR-06: 'casa blanca' mover tónica (0,0) no-aplicar + (0,1) aplicar → [2, 3]", () => {
@@ -282,6 +301,8 @@ describe("analizarRitmo", () => {
     ]);
     const r = analizarRitmo(esc, "casa blanca");
     expect(r.posicionesTonicas).toEqual([2, 3]);
+    // RIT-07: libres = {2} (3 = n-1) → sin-patron.
+    expect(r.etiqueta).toBe("sin-patron");
   });
 
   it("OVR-06: 'en un intenso pálido llamar' acento aplicar (1, 0) → [2, 4, 6, 10]", () => {
@@ -290,6 +311,8 @@ describe("analizarRitmo", () => {
     ]);
     const r = analizarRitmo(esc, "en un intenso pálido llamar");
     expect(r.posicionesTonicas).toEqual([2, 4, 6, 10]);
+    // RIT-07: libres = {2, 4, 6} (10 = n-1) → hay 3 libres, se evalúa.
+    expect(r.etiqueta).not.toBe("sin-patron");
   });
 
   it("OVR-06: elecciones huérfanas (palabra 9 y sílaba 5) no cambian el patrón", () => {
@@ -312,5 +335,7 @@ describe("analizarRitmo", () => {
     expect(esc.eleccionesAplicadas).toEqual([]);
     const r = analizarRitmo(esc, "casa blanca");
     expect(r.posicionesTonicas).toEqual([1, 3]);
+    // RIT-07: libres = {1} (3 = n-1) → sin-patron.
+    expect(r.etiqueta).toBe("sin-patron");
   });
 });

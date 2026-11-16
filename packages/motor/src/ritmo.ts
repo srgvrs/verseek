@@ -26,19 +26,23 @@ export type EtiquetaRitmo =
   | "yambico"
   | "trocaico"
   | "dactilico"
+  | "anfibraquico"
   | "anapestico"
-  | "mixto"
-  | "indeterminado";
+  | "sin-patron";
+
+export type NivelConfianza = "alta" | "media" | "baja" | "dudosa" | "sin-patron";
 
 export interface Ritmo {
   /** Patrón de acentos por sílaba métrica: `"T"` tónica, `"a"` átona. */
   readonly patron: readonly ("T" | "a")[];
   /** Posiciones tónicas (1-based) dentro del patrón. */
   readonly posicionesTonicas: readonly number[];
-  /** Etiqueta experimental de ritmo. */
+  /** Etiqueta experimental de ritmo (RIT-10). */
   readonly etiqueta: EtiquetaRitmo;
-  /** Confianza en [0, 1] de la etiqueta. */
+  /** Confianza en [0, 1] de la etiqueta (RIT-07). */
   readonly confianza: number;
+  /** Nivel cualitativo derivado de `confianza` (D10). */
+  readonly nivel: NivelConfianza;
 }
 
 /** Divide el verso en palabras (secuencias de letras). */
@@ -453,64 +457,132 @@ function posicionesTonicas(
   return posiciones;
 }
 
+/** Umbrales de D10. */
+const UMBRAL_ALTA = 0.75;
+const UMBRAL_MEDIA = 0.5;
+const UMBRAL_MINIMO = 0.4;
+const UMBRAL_DUDOSA = 0.1;
+
+/** Nivel cualitativo a partir de la confianza (D10). */
+function nivelDe(confianza: number): NivelConfianza {
+  if (confianza >= UMBRAL_ALTA) return "alta";
+  if (confianza >= UMBRAL_MEDIA) return "media";
+  return "baja";
+}
+
+/**
+ * Conjunto de posiciones tónicas (1-based) de cada patrón (RIT-03 a RIT-05).
+ * Se generan hasta `n` sílabas métricas.
+ */
+function posicionesDePatron(etiqueta: EtiquetaRitmo, n: number): number[] {
+  const out: number[] = [];
+  if (etiqueta === "yambico") {
+    for (let i = 2; i <= n; i += 2) out.push(i);
+  } else if (etiqueta === "trocaico") {
+    for (let i = 1; i <= n; i += 2) out.push(i);
+  } else if (etiqueta === "dactilico") {
+    for (let i = 1; i <= n; i += 3) out.push(i);
+  } else if (etiqueta === "anfibraquico") {
+    for (let i = 2; i <= n; i += 3) out.push(i);
+  } else if (etiqueta === "anapestico") {
+    for (let i = 3; i <= n; i += 3) out.push(i);
+  }
+  return out;
+}
+
+const PATRONES_BASE: readonly EtiquetaRitmo[] = [
+  "yambico",
+  "trocaico",
+  "dactilico",
+  "anfibraquico",
+  "anapestico",
+];
+
+/**
+ * RIT-11: un patrón es elegible solo si contiene la posición n-1.
+ */
+function esElegible(etiqueta: EtiquetaRitmo, n: number): boolean {
+  if (n < 2) return false;
+  return posicionesDePatron(etiqueta, n).includes(n - 1);
+}
+
+/**
+ * RIT-07: proporción de tónicas libres (todas menos la penúltima) que
+ * coinciden con el patrón.
+ */
+function proporcion(
+  posiciones: readonly number[],
+  patron: readonly number[],
+  n: number,
+): { proporcion: number; libres: number } {
+  const libres = posiciones.filter((p) => p !== n - 1);
+  if (libres.length === 0) return { proporcion: 0, libres: 0 };
+  const set = new Set(patron);
+  const aciertos = libres.filter((p) => set.has(p)).length;
+  return { proporcion: aciertos / libres.length, libres: libres.length };
+}
+
 /**
  * Deriva la etiqueta de ritmo a partir de las posiciones tónicas.
- * §8.5: métrica acentual, no cuantitativa.
+ * RIT-07, RIT-10, RIT-11.
  */
 function etiquetar(
   posiciones: readonly number[],
-  totalSilabas: number,
-): { etiqueta: EtiquetaRitmo; confianza: number } {
-  if (totalSilabas < 2 || posiciones.length === 0) {
-    return { etiqueta: "indeterminado", confianza: 0 };
+  n: number,
+): { etiqueta: EtiquetaRitmo; confianza: number; nivel: NivelConfianza } {
+  // RIT-07 precedencia: menos de 2 tónicas libres → sin-patron / baja.
+  const libres = posiciones.filter((p) => p !== n - 1);
+  if (libres.length < 2) {
+    return { etiqueta: "sin-patron", confianza: 0, nivel: "baja" };
   }
 
-  const ultima = posiciones[posiciones.length - 1];
-  if (ultima === undefined) {
-    return { etiqueta: "indeterminado", confianza: 0 };
-  }
-
-  // Diferencia constante entre tónicas consecutivas.
-  const deltas: number[] = [];
-  for (let i = 1; i < posiciones.length; i++) {
-    const a = posiciones[i - 1];
-    const b = posiciones[i];
-    if (a === undefined || b === undefined) continue;
-    deltas.push(b - a);
-  }
-
-  const todosIguales = (v: number): boolean =>
-    deltas.length > 0 && deltas.every((d) => d === v);
-
-  // §8.5: patrón ternario (dactílico/anapéstico) si todas las tónicas están
-  // cada 3 sílabas.
-  if (todosIguales(3)) {
-    const primera = posiciones[0] ?? 1;
-    if (primera % 3 === 1) {
-      return { etiqueta: "dactilico", confianza: 0.7 };
+  // RIT-10: en 11 sílabas, RIT-06 decide (salvo que RIT-07 imponga sin-patron,
+  // ya resuelto arriba).
+  if (n === 11) {
+    const set = new Set(posiciones);
+    const tiene6 = set.has(6);
+    const tiene4y8 = set.has(4) && set.has(8);
+    const tiene4y7 = set.has(4) && set.has(7);
+    let etiqueta: EtiquetaRitmo | null = null;
+    if (tiene6 || tiene4y8) etiqueta = "yambico";
+    else if (tiene4y7) etiqueta = "dactilico";
+    // Caso 4/6/7/10: RIT-06 da respuestas distintas → pendiente a propósito.
+    if (etiqueta === null) {
+      return { etiqueta: "sin-patron", confianza: 0, nivel: "baja" };
     }
-    return { etiqueta: "anapestico", confianza: 0.7 };
+    const patron = posicionesDePatron(etiqueta, n);
+    const { proporcion: p } = proporcion(posiciones, patron, n);
+    return { etiqueta, confianza: p, nivel: nivelDe(p) };
   }
 
-  // §8.5: patrón binario. Se decide por la última tónica: par → yámbico,
-  // impar → trocaico (métrica acentual).
-  if (deltas.length === 0 || todosIguales(2)) {
-    const etiqueta: EtiquetaRitmo = ultima % 2 === 0 ? "yambico" : "trocaico";
-    const confianza = deltas.length === 0 ? 0.4 : 0.8;
-    return { etiqueta, confianza };
+  // RIT-11: solo patrones elegibles.
+  const elegibles = PATRONES_BASE.filter((e) => esElegible(e, n));
+  if (elegibles.length === 0) {
+    return { etiqueta: "sin-patron", confianza: 0, nivel: "baja" };
   }
 
-  // Mezcla de deltas 2 y 3 → mixto con confianza baja.
-  const soloBinarioOTernario = deltas.every((d) => d === 2 || d === 3);
-  if (soloBinarioOTernario) {
-    return { etiqueta: "mixto", confianza: 0.4 };
+  // RIT-10: elegir el elegible con mayor proporción.
+  const evaluados = elegibles.map((e) => {
+    const patron = posicionesDePatron(e, n);
+    const { proporcion: p } = proporcion(posiciones, patron, n);
+    return { etiqueta: e, proporcion: p };
+  });
+  evaluados.sort((a, b) => b.proporcion - a.proporcion);
+  const mejor = evaluados[0];
+  if (mejor === undefined || mejor.proporcion < UMBRAL_MINIMO) {
+    return { etiqueta: "sin-patron", confianza: 0, nivel: "baja" };
   }
 
-  // §8.5: si el patrón no es uniforme, se clasifica por la paridad de la
-  // última tónica (métrica acentual): par → yámbico, impar → trocaico.
-  // Confianza baja por la irregularidad.
-  const etiqueta: EtiquetaRitmo = ultima % 2 === 0 ? "yambico" : "trocaico";
-  return { etiqueta, confianza: 0.3 };
+  // D10: dudosa si dos patrones difieren < 10 puntos.
+  const segundo = evaluados[1];
+  const dudosa =
+    segundo !== undefined && mejor.proporcion - segundo.proporcion < UMBRAL_DUDOSA;
+
+  return {
+    etiqueta: mejor.etiqueta,
+    confianza: mejor.proporcion,
+    nivel: dudosa ? "dudosa" : nivelDe(mejor.proporcion),
+  };
 }
 
 /**
@@ -519,6 +591,6 @@ function etiquetar(
 export function analizarRitmo(escansion: Escansion, verso: string): Ritmo {
   const patron = construirPatron(escansion, verso);
   const posiciones = posicionesTonicas(escansion, verso);
-  const { etiqueta, confianza } = etiquetar(posiciones, patron.length);
-  return { patron, posicionesTonicas: posiciones, etiqueta, confianza };
+  const { etiqueta, confianza, nivel } = etiquetar(posiciones, patron.length);
+  return { patron, posicionesTonicas: posiciones, etiqueta, confianza, nivel };
 }
