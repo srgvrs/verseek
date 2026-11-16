@@ -1,4 +1,4 @@
-# SPEC.md: reglas del motor de métrica (borrador v0.2)
+# SPEC.md: reglas del motor de métrica (borrador v0.3)
 
 Ubicación prevista: `packages/motor/SPEC.md`.
 
@@ -42,6 +42,14 @@ Este documento es el contrato del motor. Si una regla no está aquí, no se impl
 - Sección 11: añadidos 8 casos de prueba nuevos.
 - OVR-06: añadido override de acento (aplicar/no-aplicar por sílaba), con nota y casos de prueba.
 - Sección 12: añadida nota sobre rimas extrasistemáticas (rima en caída, rima potencial).
+
+### Registro de cambios v0.2 → v0.3
+
+- RIT-07: pasa de `pendiente` a `decidida`. La confianza se calcula como la proporción de tónicas **libres** del vector (RIT-01) —todas excepto la penúltima sílaba métrica (RIT-02)— que coinciden con el patrón propuesto. Si hay menos de 2 tónicas libres, la confianza es baja por datos insuficientes.
+- RIT-06: se restringe a versos de 11 sílabas métricas y se le da **precedencia** sobre la proporción: decide la etiqueta. La confianza se calcula con la proporción de RIT-07 respecto al patrón elegido.
+- Nueva regla RIT-10: formaliza la precedencia de RIT-06 y el cálculo de confianza sobre el patrón elegido.
+- D10: pasa a cerrada con los umbrales y el criterio de tónicas libres.
+- Sección 11: añadidos dos casos de prueba (endecasílabo yámbico con confianza media; octosílabo con una sola tónica libre y confianza baja).
 
 ---
 
@@ -176,10 +184,11 @@ El motor produce un **ejemplo de verso** (la escansión propuesta). Los **overri
 | RIT-03 | Yámbico: acentos en sílabas pares. [DC 5.3, p. 85] | `decidida` |
 | RIT-04 | Dactílico: acentos en 1.ª, 4.ª, 7.ª, 10.ª. Anfibráquico: 2.ª, 5.ª, 8.ª, 11.ª. Anapéstico: 3.ª, 6.ª, 9.ª, 12.ª. [DC 5.2.4, nota 60, p. 83] | `decidida` |
 | RIT-05 | Trocaico: acentos en sílabas impares. No viene en los pasajes leídos. Se propone por simetría con el yámbico. | `propuesta` |
-| RIT-06 | Endecasílabo: yámbico si lleva acento en la 6.ª, o en la 4.ª y la 8.ª. Dactílico si lleva acento en la 4.ª y la 7.ª. [DC 5.3, p. 85] | `decidida` |
-| RIT-07 | La etiqueta lleva una confianza. Cómo se calcula y qué umbrales se usan: ver D10. | `pendiente` |
+| RIT-06 | Endecasílabo: yámbico si lleva acento en la 6.ª, o en la 4.ª y la 8.ª. Dactílico si lleva acento en la 4.ª y la 7.ª. [DC 5.3, p. 85] Se aplica **solo** a versos de 11 sílabas métricas y tiene **precedencia** sobre la proporción de RIT-07: decide la etiqueta. La confianza se calcula con la proporción de RIT-07 respecto al patrón elegido (ver RIT-10). | `decidida` |
+| RIT-07 | La etiqueta lleva una confianza. Se calcula como la proporción de tónicas **libres** del vector (RIT-01) —todas excepto la penúltima sílaba métrica (RIT-02)— que coinciden con el patrón propuesto. Umbrales en D10. Si hay menos de 2 tónicas libres, la confianza es baja por datos insuficientes. | `decidida` |
 | RIT-08 | En versos silábicos (por ejemplo octosílabos) la etiqueta es solo informativa. | `decidida` |
 | RIT-09 | El campo `tonicas` de la salida contiene las posiciones (1-based, sobre sílabas métricas) de las sílabas con acento léxico según ACE-01 a ACE-06, incluidos los overrides de acento de OVR-06. No incluye acentos rítmicos (RIT-02, RIT-06) salvo que coincidan con una tónica léxica. La etiqueta de patrón (RIT-03 a RIT-06) y la confianza (RIT-07) son campos separados y no alteran `tonicas`. | `propuesta` |
+| RIT-10 | **Precedencia y confianza del patrón.** Si el verso tiene 11 sílabas métricas, RIT-06 decide la etiqueta (yámbico o dactílico) con independencia de la proporción de coincidencias. En los demás casos, la etiqueta es el patrón (RIT-03 a RIT-05) con mayor proporción de coincidencias sobre las tónicas libres. En ambos casos, la confianza se calcula con la proporción de RIT-07 respecto al patrón elegido, aplicando los umbrales de D10. | `propuesta` |
 
 ### Evidencia para RIT-07
 [NE1] cap. I (El hada manzana, p. 21) clasifica los versos en dactílico, anfibráquico, anapéstico, yámbico, compuesto, trocaico y **dudoso**. La categoría "dudoso" se aplica al verso 20, que "puede entenderse como dodecasílabo de problemática definición: anfibráquico con ruptura del ritmo por acentuar en la sílaba 9.ª en lugar de en la 8.ª". Es un precedente útil para la escala de confianza.
@@ -247,7 +256,7 @@ OVR-06 es la materialización de ACE-08: el motor calcula solo el acento normal,
 | **D7** | Sinalefa y vocal tónica final (LIC-03, LIC-10) | **Cerrada: no bloquear.** La sinalefa se aplica por defecto aunque la vocal final sea tónica o cerrada con tilde (*su último* → *su‿úl*). Las conjunciones *e, o, y* siguen LIC-03 (no sinalefa triple por defecto). | **[NE1] cap. IX (Urna votiva, pp. 136-137)** documenta sinalefas con vocal tónica sin problema. La evidencia apoya mantener LIC-01 y tratar D7 como override, no como bloqueo automático. |
 | **D8** | Orden de aplicación de las licencias | Primero silabeo, luego sinalefa, luego cómputo. Confirmar que no hay interacciones que obliguen a otro orden. | Sin evidencia en [NE1]/[NE2]. |
 | **D9** | *h* aspirada (LIC-04) | Soporte solo por override del usuario, o una lista de palabras (*hermosa*, *hacer*...) para poesía antigua. | Sin evidencia en [NE1]/[NE2]. |
-| **D10** | Confianza del ritmo (RIT-07) | Proponer: proporción de acentos que coinciden con el patrón. Definir umbrales para "alta, media, baja". | **[NE1] cap. I (p. 21)** y **[NE2] cap. X (pp. 176-177)**. Propuesta concreta abajo. |
+| **D10** | Confianza del ritmo (RIT-07) | **Cerrada.** La confianza es la proporción de tónicas **libres** del vector (RIT-01) —todas excepto la penúltima sílaba métrica (RIT-02)— que coinciden con el patrón elegido. Umbrales: **alta** ≥ 75 %; **media** entre 50 % y 75 %; **baja** < 50 %; **dudosa** si dos patrones difieren < 10 puntos; **sin patrón** si ninguno supera el 40 %. Si hay menos de 2 tónicas libres, la confianza es baja por datos insuficientes. En versos de 11 sílabas métricas, RIT-06 decide la etiqueta (RIT-10) y la confianza se calcula sobre ese patrón. | **[NE1] cap. I (p. 21)** y **[NE2] cap. X (pp. 176-177)**. Propuesta concreta abajo. |
 | **D11** | Marca de diéresis en la entrada (NOR-04) | ¿Se interpreta *ü* como diéresis métrica o se usa solo el override? Ojo: *ü* también es ortográfica en *pingüino*. | **[NE1] cap. VII (pp. 101-125)**. Propuesta concreta abajo. |
 | **D12** | Números, siglas y extranjerismos (NOR-05) | ¿Se ignoran, se silabean por reglas o se piden al usuario? | Sin evidencia en [NE1]/[NE2]. |
 | **D13** | Polivalencia *ui / iu* en asonancia (RIM-09) | ¿Opción global o override por pareja de versos? | **[NE2] cap. VIII (pp. 160-161)** confirma que es genuinamente ambiguo. Recomendación: override por pareja de versos u opción global. |
@@ -298,6 +307,8 @@ Las pruebas que salgan de aquí deben llevar el ID de la regla en su nombre (por
 | *mi ditirambo brá / sileño es ditirambo* | 14 sílabas con tmesis en *brá/sileño* | COM-04 (v2), D14 | [NE2] cap. X, p. 173 |
 | *viuda* asonante en *ia* | Asonancia ambigua: puede asonar en *ia* o en *ua* | RIM-09, D13 | [NE2] cap. VIII, p. 160 |
 | *claramente* | 4 sílabas (cla-ra-men-te), dos tónicas: *cla* y *men*. Final llano, total métrico 4. | ACE-06, COM-02, RIT-01 | — |
+| *Feliciano me adora y le aborrezco* | 11 sílabas métricas; tónicas en 3, 6 y 10; yámbico por RIT-06; confianza media (1 de 2 tónicas libres en pares) | RIT-06, RIT-07, RIT-10 | — |
+| *de súbito la ciudad* | 8 sílabas métricas; tónicas en 2 y 7; una sola tónica libre → confianza baja por datos insuficientes | RIT-07, RIT-10 | — |
 
 ---
 
