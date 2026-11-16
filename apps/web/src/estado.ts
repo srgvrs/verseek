@@ -66,3 +66,45 @@ export function alternarCandidato(
 
   eleccionesPorVerso.set(versoId, siguientes);
 }
+
+/**
+ * §OVR-06: alterna el override de acento de una sílaba concreta.
+ * Si ya existe una elección `acento` para `(palabra, silaba)`, la elimina;
+ * si no, la añade con `valor = tonicaActual ? "no-aplicar" : "aplicar"`.
+ */
+export function alternarAcento(
+  versoId: number,
+  palabra: number,
+  silaba: number,
+  tonicaActual: boolean,
+): void {
+  const previas = eleccionesPorVerso.get(versoId) ?? [];
+  const existe = previas.some(
+    (e) =>
+      e.tipo === "acento" &&
+      e.palabraA === palabra &&
+      e.palabraB === palabra &&
+      e.silaba === silaba,
+  );
+  if (existe) {
+    const siguientes = previas.filter(
+      (e) =>
+        !(
+          e.tipo === "acento" &&
+          e.palabraA === palabra &&
+          e.palabraB === palabra &&
+          e.silaba === silaba
+        ),
+    );
+    eleccionesPorVerso.set(versoId, siguientes);
+    return;
+  }
+  const nueva: Eleccion = {
+    tipo: "acento",
+    palabraA: palabra,
+    palabraB: palabra,
+    silaba,
+    valor: tonicaActual ? "no-aplicar" : "aplicar",
+  };
+  eleccionesPorVerso.set(versoId, [...previas, nueva]);
+}

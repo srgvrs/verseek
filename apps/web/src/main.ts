@@ -1,6 +1,6 @@
 import { montarEditor, setMetricas, setTonicas } from "./editor";
 import { crearPanel } from "./panel";
-import { alternarCandidato, eleccionesDe } from "./estado";
+import { alternarAcento, alternarCandidato, eleccionesDe } from "./estado";
 import type { AnalisisVerso, CandidatoAnalizado } from "@verseek/motor";
 import type {
   MensajeEntrada,
@@ -30,10 +30,16 @@ function lineaDelCursor(): number {
   return view.state.doc.lineAt(view.state.selection.main.head).number - 1;
 }
 
-const panel = crearPanel((c: CandidatoAnalizado) => {
-  alternarCandidato(lineaDelCursor(), c);
-  enviarAnalisis();
-});
+const panel = crearPanel(
+  (c: CandidatoAnalizado) => {
+    alternarCandidato(lineaDelCursor(), c);
+    enviarAnalisis();
+  },
+  (palabra: number, silaba: number, tonica: boolean) => {
+    alternarAcento(lineaDelCursor(), palabra, silaba, tonica);
+    enviarAnalisis();
+  },
+);
 const analisisPorId = new Map<number, AnalisisVerso>();
 
 function refrescarPanel(): void {

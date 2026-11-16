@@ -11,6 +11,7 @@ export interface Panel {
  */
 export function crearPanel(
   alClicar: (c: CandidatoAnalizado) => void,
+  alClicarSilaba: (palabra: number, silaba: number, tonica: boolean) => void,
 ): Panel {
   const contenedor = document.createElement("div");
   contenedor.id = "panel-candidatos";
@@ -64,6 +65,51 @@ export function crearPanel(
       seccionRitmo.appendChild(lineaPosiciones);
     }
     contenedor.appendChild(seccionRitmo);
+
+    const seccionSilabas = document.createElement("div");
+    seccionSilabas.style.marginBottom = "0.5rem";
+    const tituloSilabas = document.createElement("div");
+    tituloSilabas.textContent = "Sílabas";
+    tituloSilabas.style.fontWeight = "bold";
+    seccionSilabas.appendChild(tituloSilabas);
+
+    if (analisis === null || analisis.silabas.length === 0) {
+      const sinSilabas = document.createElement("div");
+      sinSilabas.textContent = "Sin sílabas";
+      seccionSilabas.appendChild(sinSilabas);
+    } else {
+      const lineaSilabas = document.createElement("div");
+      let palabraActual = -1;
+      let indiceEnPalabra = 0;
+      for (const s of analisis.silabas) {
+        if (s.palabra !== palabraActual) {
+          if (palabraActual !== -1) {
+            lineaSilabas.appendChild(document.createTextNode(" "));
+          }
+          palabraActual = s.palabra;
+          indiceEnPalabra = 0;
+        }
+        const indice = indiceEnPalabra;
+        indiceEnPalabra += 1;
+        const boton = document.createElement("button");
+        boton.type = "button";
+        boton.style.background = "transparent";
+        boton.style.border = "none";
+        boton.style.padding = "0 0.1rem";
+        boton.style.font = "inherit";
+        boton.style.cursor = "pointer";
+        boton.textContent = s.texto;
+        if (s.tonica) {
+          boton.style.fontWeight = "bold";
+        }
+        boton.addEventListener("click", () =>
+          alClicarSilaba(s.palabra, indice, s.tonica),
+        );
+        lineaSilabas.appendChild(boton);
+      }
+      seccionSilabas.appendChild(lineaSilabas);
+    }
+    contenedor.appendChild(seccionSilabas);
 
     const candidatos = analisis?.candidatos ?? null;
     if (analisis === null || candidatos === null || candidatos.length === 0) {
