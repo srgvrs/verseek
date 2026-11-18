@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import corpus from "./corpus/versos.json";
 import { resolverEscansion } from "../src/escansion.js";
 import { analizarRitmo, unidadesMetricas } from "../src/ritmo.js";
+import type { Eleccion } from "../src/index.js";
 
 describe("analizarRitmo", () => {
   it("verso vacío: patrón vacío, sin-patron", () => {
@@ -224,8 +225,8 @@ describe("analizarRitmo", () => {
     const r = analizarRitmo(esc, "dime lo que");
     // di-me lo que → tónicas en 1 (di) y 4 (que, por ACE-05b).
     expect(r.posicionesTonicas).toEqual([1, 4]);
-    // RIT-07: libres = {1} (4 = n-1) → sin-patron.
-    expect(r.etiqueta).toBe("sin-patron");
+    // RIT-07: n=4, libres = {1, 4} → trocaico.
+    expect(r.etiqueta).toBe("trocaico");
   });
 
   it("ACE-05b: 'que dime lo' — 'que' inicial átono, 'lo' final tónico", () => {
@@ -233,7 +234,7 @@ describe("analizarRitmo", () => {
     const r = analizarRitmo(esc, "que dime lo");
     // que di-me lo → tónicas en 2 (di) y 4 (lo, por ACE-05b).
     expect(r.posicionesTonicas).toEqual([2, 4]);
-    // RIT-07: libres = {2} (4 = n-1) → sin-patron.
+    // RIT-07: n=4, libres = {2, 4} → sin-patron.
     expect(r.etiqueta).toBe("sin-patron");
   });
 

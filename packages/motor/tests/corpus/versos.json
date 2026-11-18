@@ -116,8 +116,7 @@
         "valor": "aplicar"
       }
     ],
-    "categoria": "dieresis",
-    "nota": "BUG MOTOR: candidatosIntraPalabra salta palabras monosílabas (if silabas.length < 2) continue; fluir es monosílaba y su diéresis nunca se genera."
+    "categoria": "dieresis"
   },
   {
     "id": "ruiz-fabo-01",
