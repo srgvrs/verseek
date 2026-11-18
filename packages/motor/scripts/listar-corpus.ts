@@ -3,6 +3,7 @@ import { fileURLToPath } from "node:url";
 import {
   resolverEscansion,
   analizarRitmo,
+  computar,
   type Eleccion,
 } from "../src/index.js";
 
@@ -12,6 +13,7 @@ interface VersoCorpus {
   readonly fuente: string;
   readonly verificado: string;
   readonly tonicas: readonly number[];
+  readonly metricas: number;
   readonly elecciones: readonly Eleccion[];
   readonly nota?: string;
 }
@@ -29,8 +31,8 @@ function cargarCorpus(): readonly VersoCorpus[] {
   return datos as readonly VersoCorpus[];
 }
 
-function formatearPatron(patron: readonly boolean[]): string {
-  return patron.map((t) => (t ? "T" : "a")).join("");
+function formatearPatron(patron: readonly ("T" | "a")[]): string {
+  return patron.join("");
 }
 
 function mismasTonicas(a: readonly number[], b: readonly number[]): boolean {
@@ -46,18 +48,22 @@ function main(): void {
   const corpus = cargarCorpus();
 
   let listados = 0;
-  let diferencias = 0;
+  let diferenciasTonicas = 0;
+  let diferenciasMetricas = 0;
 
   for (const v of corpus) {
     if (soloPendientes && v.verificado !== "pendiente") continue;
 
     const esc = resolverEscansion(v.texto, v.elecciones);
     const ritmo = analizarRitmo(esc, v.texto);
+    const computo = computar(esc, v.texto);
     const tonicasMotor = [...ritmo.posicionesTonicas];
-    const ok = mismasTonicas(v.tonicas, tonicasMotor);
+    const okTonicas = mismasTonicas(v.tonicas, tonicasMotor);
+    const okMetricas = v.metricas === computo.silabasMetricas;
 
     listados++;
-    if (!ok) diferencias++;
+    if (!okTonicas) diferenciasTonicas++;
+    if (!okMetricas) diferenciasMetricas++;
 
     console.log(`id:        ${v.id}`);
     console.log(`texto:     ${v.texto}`);
@@ -65,15 +71,18 @@ function main(): void {
     console.log(`verificado: ${v.verificado}`);
     console.log(`tónicas JSON:  [${v.tonicas.join(", ")}]`);
     console.log(`tónicas motor: [${tonicasMotor.join(", ")}]`);
+    console.log(`métricas JSON: ${v.metricas}, motor: ${computo.silabasMetricas}`);
     console.log(`patrón:    ${formatearPatron(ritmo.patron)}`);
-    console.log(`estado:    ${ok ? "OK" : "DIFIERE"}`);
+    console.log(`estado:    ${okTonicas ? "OK" : "DIFIERE"}`);
     if (v.nota !== undefined) {
       console.log(`nota:      ${v.nota}`);
     }
     console.log("");
   }
 
-  console.log(`${listados} versos listados, ${diferencias} con DIFIERE`);
+  console.log(
+    `${listados} versos listados, ${diferenciasTonicas} con DIFIERE (tónicas), ${diferenciasMetricas} con DIFIERE (métricas)`,
+  );
 }
 
 main();
