@@ -1,20 +1,26 @@
 /**
- * Patrón de acentos y etiqueta de ritmo (spike, experimental).
- * Ver `SPEC.propuesta.md` §8.
+ * Patrón de acentos y etiqueta de ritmo (experimental).
+ * Ver `SPEC.md` §7 (RIT-01 a RIT-11) y D10.
  *
  * Pureza: sin estado global, sin I/O, no muta la entrada.
  *
- * Reglas (ver `SPEC.propuesta.md` §8):
- *  - §8.2 Se parte de una `Escansion` ya resuelta y del texto del verso.
- *  - §8.3 Se aplica la ley de acento final (aguda +1, esdrújula −1) para que
- *    las posiciones coincidan con el cómputo métrico.
- *  - §8.4 El patrón es un array de `"T"` (tónica) / `"a"` (átona) por sílaba
- *    métrica, en orden.
- *  - §8.5 La etiqueta de ritmo se deriva de la ÚLTIMA tónica (métrica
- *    acentual, no cuantitativa): par → trocaico, impar → yámbico. Si hay
- *    tónicas cada 3 sílabas → dactílico/anapéstico según el ancla.
- *  - §8.6 La etiqueta es EXPERIMENTAL: se devuelve con `confianza` en [0,1]
- *    y nunca se presenta como verdad.
+ * Reglas (ver `SPEC.md` §7):
+ *  - RIT-01 El patrón es un array de `"T"` (tónica) / `"a"` (átona) por
+ *    sílaba métrica, en orden.
+ *  - RIT-02 La penúltima sílaba métrica es siempre tónica y su acento es
+ *    siempre rítmico.
+ *  - RIT-03 a RIT-06 Definen los patrones (yámbico, trocaico, dactílico,
+ *    anfibráquico, anapéstico) y la regla del endecasílabo.
+ *  - RIT-07 La confianza es la proporción de tónicas libres (todas menos la
+ *    penúltima) que coinciden con el patrón. Menos de 2 libres → `sin-patron`
+ *    con nivel `baja` y confianza 0 (precedencia sobre las demás reglas).
+ *  - RIT-10 Precedencia y confianza del patrón: en 11 sílabas decide RIT-06;
+ *    en el resto, el patrón elegible con mayor proporción. El umbral del 40 %
+ *    se aplica también en 11 sílabas.
+ *  - RIT-11 Elegibilidad por penúltima: un patrón solo es elegible si
+ *    contiene la posición n-1.
+ *  - La etiqueta es EXPERIMENTAL: se devuelve con `confianza` en [0,1] y
+ *    nunca se presenta como verdad.
  */
 
 import { clasificarAcento, esAtono } from "./acento.js";
@@ -546,12 +552,18 @@ export function etiquetarPatron(
     let etiqueta: EtiquetaRitmo | null = null;
     if (tiene6 || tiene4y8) etiqueta = "yambico";
     else if (tiene4y7) etiqueta = "dactilico";
-    // Caso 4/6/7/10: RIT-06 da respuestas distintas → pendiente a propósito.
+    // Caso 4/6/7/10: RIT-06 da respuestas distintas. La regla de la 6.ª se
+    // evalúa primero y devuelve yámbico; es un resultado provisional
+    // (SPEC: pendiente a propósito), no una decisión cerrada.
     if (etiqueta === null) {
       return { etiqueta: "sin-patron", confianza: 0, nivel: "baja" };
     }
     const patron = posicionesDePatron(etiqueta, n);
     const { proporcion: p } = proporcion(posiciones, patron, n);
+    // RIT-10: el umbral del 40 % de D10 también se aplica en 11 sílabas.
+    if (p < UMBRAL_MINIMO) {
+      return { etiqueta: "sin-patron", confianza: 0, nivel: "sin-patron" };
+    }
     return { etiqueta, confianza: p, nivel: nivelDe(p) };
   }
 
@@ -570,7 +582,9 @@ export function etiquetarPatron(
   evaluados.sort((a, b) => b.proporcion - a.proporcion);
   const mejor = evaluados[0];
   if (mejor === undefined || mejor.proporcion < UMBRAL_MINIMO) {
-    return { etiqueta: "sin-patron", confianza: 0, nivel: "baja" };
+    // RIT-07: con 2 o más libres, si ningún patrón elegible alcanza el 40 %
+    // la etiqueta es `sin-patron` y el nivel es `sin-patron`.
+    return { etiqueta: "sin-patron", confianza: 0, nivel: "sin-patron" };
   }
 
   // D10: dudosa si dos patrones difieren < 10 puntos.
