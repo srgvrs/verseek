@@ -58,6 +58,8 @@ Este documento es el contrato del motor. Si una regla no está aquí, no se impl
 - Sección 11: el caso de 11 sílabas con tónicas 4, 6, 7, 10 queda como `pendiente a propósito`, con nota de que el código actual devuelve yámbico de forma provisional.
 - RIT-10: el umbral del 40 % de D10 se aplica también en 11 sílabas; si la proporción del patrón decidido por RIT-06 es inferior al 40 %, la etiqueta es `sin-patron` (nivel `sin-patron`).
 - RIT-10: nombre en interfaz de `sin-patron` = 'ritmo libre'; es solo texto de presentación, el identificador no cambia.
+- RIT-02: añadida limitación conocida (v1) sobre el monosílabo final y el +1 de COM-02; pendiente de decisión.
+- Sección 11: añadido caso de prueba *dime lo que* (trocaico, confianza media).
 
 ---
 
@@ -188,7 +190,7 @@ El motor produce un **ejemplo de verso** (la escansión propuesta). Los **overri
 | ID | Regla | Estado |
 | :--- | :--- | :--- |
 | RIT-01 | El motor construye el vector de acentos del verso: una posición por sílaba métrica, tónica o átona. La notación es *o* (átona) y *ó* (tónica). [DC 5.1, p. 76] | `decidida` |
-| RIT-02 | La penúltima sílaba métrica es siempre tónica, y su acento es siempre rítmico. [DC 5.3, p. 85] | `decidida` |
+| RIT-02 | La penúltima sílaba métrica es siempre tónica, y su acento es siempre rítmico. [DC 5.3, p. 85] Limitación conocida (v1): el monosílabo final no recibe el +1 de COM-02, de modo que en versos terminados en monosílabo la última sílaba es tónica y la penúltima (n-1) puede no serlo. Pendiente de decisión (¿cuenta el monosílabo final como agudo?). | `decidida` |
 | RIT-03 | Yámbico: acentos en sílabas pares. [DC 5.3, p. 85] | `decidida` |
 | RIT-04 | Dactílico: acentos en 1.ª, 4.ª, 7.ª, 10.ª. Anfibráquico: 2.ª, 5.ª, 8.ª, 11.ª. Anapéstico: 3.ª, 6.ª, 9.ª, 12.ª. [DC 5.2.4, nota 60, p. 83] | `decidida` |
 | RIT-05 | Trocaico: acentos en sílabas impares. No viene en los pasajes leídos. Se propone por simetría con el yámbico. | `propuesta` |
@@ -315,6 +317,7 @@ Las pruebas que salgan de aquí deben llevar el ID de la regla en su nombre (por
 | 8 sílabas, tónicas 3, 6, 7 | Trocaico, confianza media (1/2 libres); anapéstico, anfibráquico y yámbico descalificados por RIT-11. | RIT-11, RIT-07 | — (caso construido) |
 | 12 sílabas, tónicas 2, 5, 8, 11 | Anfibráquico, confianza alta (3/3 libres); yámbico descalificado. | RIT-11, RIT-07 | — (caso construido) |
 | 11 sílabas, tónicas 4, 6, 7, 10 | Caso de empate de RIT-06, resultado `pendiente a propósito`. | RIT-06, RIT-10 | — (caso construido) |
+| *dime lo que* | 4 sílabas métricas; tónicas en 1 y 4; trocaico (1/2 libres), confianza media | ACE-05b, RIT-02, RIT-11 | — (caso construido) |
 
 > **Nota (11 sílabas, tónicas 4, 6, 7, 10):** el código actual devuelve yámbico (la regla de la 6.ª se evalúa primero); es un resultado provisional, no una decisión.
 
