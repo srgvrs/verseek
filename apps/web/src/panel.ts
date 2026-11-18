@@ -62,6 +62,19 @@ export function crearPanel(
       lineaConfianza.textContent = `confianza: ${ritmo.confianza} (${ritmo.nivel})`;
       seccionRitmo.appendChild(lineaConfianza);
 
+      if (ritmo.candidatos.length > 0) {
+        const tituloCandidatos = document.createElement("div");
+        tituloCandidatos.textContent = "Patrones posibles";
+        tituloCandidatos.style.fontWeight = "bold";
+        seccionRitmo.appendChild(tituloCandidatos);
+        for (const c of ritmo.candidatos) {
+          const lineaCandidato = document.createElement("div");
+          const porcentaje = Math.round(c.proporcion * 100);
+          lineaCandidato.textContent = `${c.etiqueta} ${porcentaje}%`;
+          seccionRitmo.appendChild(lineaCandidato);
+        }
+      }
+
       const lineaPosiciones = document.createElement("div");
       lineaPosiciones.textContent = `posiciones tónicas: ${ritmo.posicionesTonicas.join(", ")}`;
       seccionRitmo.appendChild(lineaPosiciones);
