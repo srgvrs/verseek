@@ -38,6 +38,12 @@ export type EtiquetaRitmo =
 
 export type NivelConfianza = "alta" | "media" | "baja" | "dudosa" | "sin-patron";
 
+/** RIT-10: patrón elegible con su proporción de coincidencias (RIT-07). */
+export interface CandidatoRitmo {
+  readonly etiqueta: EtiquetaRitmo;
+  readonly proporcion: number;
+}
+
 export interface Ritmo {
   /** Patrón de acentos por sílaba métrica: `"T"` tónica, `"a"` átona. */
   readonly patron: readonly ("T" | "a")[];
@@ -49,6 +55,8 @@ export interface Ritmo {
   readonly confianza: number;
   /** Nivel cualitativo derivado de `confianza` (D10). */
   readonly nivel: NivelConfianza;
+  /** RIT-10: patrones elegibles con su proporción, ordenados y máximo 3. */
+  readonly candidatos: readonly CandidatoRitmo[];
 }
 
 /** Divide el verso en palabras (secuencias de letras). */
@@ -528,6 +536,27 @@ function proporcion(
   return { proporcion: aciertos / libres.length, libres: libres.length };
 }
 
+/** RIT-10: máximo de candidatos devueltos. */
+const MAX_CANDIDATOS = 3;
+
+/**
+ * RIT-10: candidatos = patrones elegibles (RIT-11) con su proporción
+ * (RIT-07), ordenados de mayor a menor, máximo 3.
+ */
+function calcularCandidatos(
+  posiciones: readonly number[],
+  n: number,
+): CandidatoRitmo[] {
+  const elegibles = PATRONES_BASE.filter((e) => esElegible(e, n));
+  const evaluados = elegibles.map((e) => {
+    const patron = posicionesDePatron(e, n);
+    const { proporcion: p } = proporcion(posiciones, patron, n);
+    return { etiqueta: e, proporcion: p };
+  });
+  evaluados.sort((a, b) => b.proporcion - a.proporcion);
+  return evaluados.slice(0, MAX_CANDIDATOS);
+}
+
 /**
  * Deriva la etiqueta de ritmo a partir de las posiciones tónicas.
  * RIT-07, RIT-10, RIT-11.
@@ -535,11 +564,16 @@ function proporcion(
 export function etiquetarPatron(
   posiciones: readonly number[],
   n: number,
-): { etiqueta: EtiquetaRitmo; confianza: number; nivel: NivelConfianza } {
+): {
+  etiqueta: EtiquetaRitmo;
+  confianza: number;
+  nivel: NivelConfianza;
+  candidatos: readonly CandidatoRitmo[];
+} {
   // RIT-07 precedencia: menos de 2 tónicas libres → sin-patron / baja.
   const libres = posiciones.filter((p) => p !== n - 1);
   if (libres.length < 2) {
-    return { etiqueta: "sin-patron", confianza: 0, nivel: "baja" };
+    return { etiqueta: "sin-patron", confianza: 0, nivel: "baja", candidatos: [] };
   }
 
   // RIT-10: en 11 sílabas, RIT-06 decide (salvo que RIT-07 imponga sin-patron,
@@ -555,22 +589,23 @@ export function etiquetarPatron(
     // Caso 4/6/7/10: RIT-06 da respuestas distintas. La regla de la 6.ª se
     // evalúa primero y devuelve yámbico; es un resultado provisional
     // (SPEC: pendiente a propósito), no una decisión cerrada.
+    const candidatos = calcularCandidatos(posiciones, n);
     if (etiqueta === null) {
-      return { etiqueta: "sin-patron", confianza: 0, nivel: "baja" };
+      return { etiqueta: "sin-patron", confianza: 0, nivel: "baja", candidatos };
     }
     const patron = posicionesDePatron(etiqueta, n);
     const { proporcion: p } = proporcion(posiciones, patron, n);
     // RIT-10: el umbral del 40 % de D10 también se aplica en 11 sílabas.
     if (p < UMBRAL_MINIMO) {
-      return { etiqueta: "sin-patron", confianza: 0, nivel: "sin-patron" };
+      return { etiqueta: "sin-patron", confianza: 0, nivel: "sin-patron", candidatos };
     }
-    return { etiqueta, confianza: p, nivel: nivelDe(p) };
+    return { etiqueta, confianza: p, nivel: nivelDe(p), candidatos };
   }
 
   // RIT-11: solo patrones elegibles.
   const elegibles = PATRONES_BASE.filter((e) => esElegible(e, n));
   if (elegibles.length === 0) {
-    return { etiqueta: "sin-patron", confianza: 0, nivel: "baja" };
+    return { etiqueta: "sin-patron", confianza: 0, nivel: "baja", candidatos: [] };
   }
 
   // RIT-10: elegir el elegible con mayor proporción.
@@ -580,11 +615,12 @@ export function etiquetarPatron(
     return { etiqueta: e, proporcion: p };
   });
   evaluados.sort((a, b) => b.proporcion - a.proporcion);
+  const candidatos = evaluados.slice(0, MAX_CANDIDATOS);
   const mejor = evaluados[0];
   if (mejor === undefined || mejor.proporcion < UMBRAL_MINIMO) {
     // RIT-07: con 2 o más libres, si ningún patrón elegible alcanza el 40 %
     // la etiqueta es `sin-patron` y el nivel es `sin-patron`.
-    return { etiqueta: "sin-patron", confianza: 0, nivel: "sin-patron" };
+    return { etiqueta: "sin-patron", confianza: 0, nivel: "sin-patron", candidatos };
   }
 
   // D10: dudosa si dos patrones difieren < 10 puntos.
@@ -596,6 +632,7 @@ export function etiquetarPatron(
     etiqueta: mejor.etiqueta,
     confianza: mejor.proporcion,
     nivel: dudosa ? "dudosa" : nivelDe(mejor.proporcion),
+    candidatos,
   };
 }
 
@@ -605,6 +642,16 @@ export function etiquetarPatron(
 export function analizarRitmo(escansion: Escansion, verso: string): Ritmo {
   const patron = construirPatron(escansion, verso);
   const posiciones = posicionesTonicas(escansion, verso);
-  const { etiqueta, confianza, nivel } = etiquetarPatron(posiciones, patron.length);
-  return { patron, posicionesTonicas: posiciones, etiqueta, confianza, nivel };
+  const { etiqueta, confianza, nivel, candidatos } = etiquetarPatron(
+    posiciones,
+    patron.length,
+  );
+  return {
+    patron,
+    posicionesTonicas: posiciones,
+    etiqueta,
+    confianza,
+    nivel,
+    candidatos,
+  };
 }
