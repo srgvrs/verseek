@@ -53,11 +53,13 @@ export function crearPanel(
       seccionRitmo.appendChild(lineaPatron);
 
       const lineaEtiqueta = document.createElement("div");
-      lineaEtiqueta.textContent = `etiqueta: ${ritmo.etiqueta}`;
+      const etiquetaTexto =
+        ritmo.etiqueta === "sin-patron" ? "ritmo libre" : ritmo.etiqueta;
+      lineaEtiqueta.textContent = `etiqueta: ${etiquetaTexto} (experimental)`;
       seccionRitmo.appendChild(lineaEtiqueta);
 
       const lineaConfianza = document.createElement("div");
-      lineaConfianza.textContent = `confianza: ${ritmo.confianza}`;
+      lineaConfianza.textContent = `confianza: ${ritmo.confianza} (${ritmo.nivel})`;
       seccionRitmo.appendChild(lineaConfianza);
 
       const lineaPosiciones = document.createElement("div");
