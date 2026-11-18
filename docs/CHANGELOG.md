@@ -1,5 +1,36 @@
 # CHANGELOG
 
+## [Unreleased] — 2026-11-17
+
+### Fixed (ritmo)
+- **RIT-10**: en la rama `n === 11` de `etiquetarPatron`, si la proporción del
+  patrón decidido por RIT-06 es inferior al 40 % (`UMBRAL_MINIMO`), se devuelve
+  `sin-patron` con nivel `sin-patron` y confianza 0. Antes devolvía la etiqueta
+  de RIT-06 con confianza baja.
+- **RIT-07**: cuando ningún patrón elegible alcanza el 40 % (con 2 o más
+  tónicas libres), el nivel es `sin-patron` (antes `baja`). El caso de menos
+  de 2 libres sigue devolviendo nivel `baja` y confianza 0.
+- Cabecera de `ritmo.ts` reescrita: cita `SPEC.md` §7 (RIT-01…RIT-11) y D10;
+  se elimina la referencia a `SPEC.propuesta.md` §8 y la afirmación
+  "par → trocaico".
+- Comentario del caso 4/6/7/10 corregido: la regla de la 6.ª se evalúa primero
+  y devuelve yámbico; es resultado provisional (SPEC: pendiente a propósito).
+  Sin cambio de comportamiento.
+
+### Fixed (tests)
+- `ritmo.test.ts`: los casos `dime lo que` y `que dime lo` esperan `trocaico`
+  (n=4, penúltima = 3). Se eliminan los `console.log` y se corrigen los
+  comentarios de tónicas libres.
+
+### Changed (UI)
+- `apps/web/src/panel.ts`: muestra `nivel` del ritmo, marca la etiqueta como
+  `(experimental)` y presenta `sin-patron` como "ritmo libre" (RIT-10; solo
+  texto de presentación, el identificador no cambia).
+
+### Known limitation
+- El monosílabo final del verso no suma +1 como aguda en el cómputo métrico.
+  Cambiarlo afectaría al corpus; queda documentado como limitación conocida.
+
 ## [Spike] Estado actual del motor
 
 ### Implementado y en verde (68 tests)

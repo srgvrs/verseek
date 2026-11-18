@@ -19,6 +19,24 @@ oro (`tests/corpus.test.ts`, 27 versos) y `corpus-ritmo.test.ts` (54/54).
 
 ## Fase 2 del motor: 🟡 EN CURSO
 
+### Hecho (2026-11-17)
+
+- **RIT-10**: umbral del 40 % aplicado también en `n === 11`; si la proporción
+  del patrón de RIT-06 es inferior, la etiqueta es `sin-patron` con nivel
+  `sin-patron`.
+- **RIT-07**: con 2 o más tónicas libres y ningún patrón elegible ≥ 40 %, el
+  nivel es `sin-patron` (antes `baja`).
+- Cabecera de `ritmo.ts` alineada con `SPEC.md` §7 (RIT-01…RIT-11) y D10.
+- `ritmo.test.ts`: `dime lo que` y `que dime lo` esperan `trocaico` (n=4,
+  penúltima = 3); sin `console.log`.
+- `apps/web/src/panel.ts`: muestra `nivel`, marca la etiqueta como
+  `(experimental)` y presenta `sin-patron` como "ritmo libre".
+
+### Limitación conocida (2026-11-17)
+
+- El monosílabo final del verso no suma +1 como aguda en el cómputo métrico.
+  Cambiarlo afectaría al corpus; queda documentado como limitación conocida.
+
 > **Corrección (2026-11-14):** la fase 2 **no** está completada. La entrada
 > anterior la daba por cerrada; se corrige aquí. El pipeline funciona, pero
 > quedan decisiones abiertas y fallos de oráculo en el corpus de ritmo.
