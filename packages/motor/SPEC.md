@@ -63,6 +63,7 @@ Este documento es el contrato del motor. Si una regla no está aquí, no se impl
 - RIT-10: añadido campo de salida `candidatos` (patrones elegibles con su proporción, ordenados de mayor a menor, máximo 3).
 - D10: añadida limitación conocida ampliada (la confianza no penaliza posiciones del patrón sin acento) y nota sobre `candidatos`.
 - Sección 11: añadido caso de prueba 10 sílabas, tónicas 1, 5, 9 (trocaico, confianza alta, con nota de limitación).
+- OVR-02: añadida nota de anclaje entre versos (fase 4, v1): reubicación por línea ante inserción/borrado/edición de líneas; el anclaje a palabra y ocurrencia dentro del verso sigue pendiente.
 
 ---
 
@@ -243,7 +244,7 @@ La equivalencia i/e, u/o es una convención **normativa**, no una descripción f
 | ID | Regla | Estado |
 | :--- | :--- | :--- |
 | OVR-01 | Tipos de override: sinalefa (activar o desactivar), hiato, sinéresis, diéresis y acento (mover la tónica). | `propuesta` |
-| OVR-02 | Un override se ancla a la **palabra y su número de ocurrencia dentro del verso**, no a la posición en el texto. Así sobrevive a las ediciones. | `propuesta` |
+| OVR-02 | Un override se ancla a la **palabra y su número de ocurrencia dentro del verso**, no a la posición en el texto. Así sobrevive a las ediciones. Anclaje entre versos (fase 4, v1): las elecciones se asocian a la línea del verso y se reubican cuando cambia el número de líneas del documento. Insertar líneas antes de un verso desplaza sus elecciones; borrar una línea descarta sus elecciones y desplaza las siguientes; editar texto dentro de una línea sin añadir ni quitar saltos las conserva. Dividir una línea con elecciones deja las elecciones en la primera parte. El anclaje a palabra y ocurrencia dentro del verso sigue pendiente. | `propuesta` |
 | OVR-03 | Prioridad: override del usuario, luego regla del SPEC. | `propuesta` |
 | OVR-04 | Los overrides nunca modifican el texto original. | `decidida` |
 | OVR-05 | Las elecciones de sinéresis/diéresis se anclan solo a la palabra. La sinéresis se aplica al último par de vocales en hiato de la palabra; la diéresis, al primer diptongo. Tras la diéresis, la tónica queda en la mitad con la vocal tónica de la palabra. Anclaje exacto: fuera de v1. | `propuesta` |
