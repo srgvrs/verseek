@@ -1,6 +1,16 @@
 import type { CandidatoAnalizado, Eleccion } from "@verseek/motor";
+import { reubicarElecciones, type CambioLineas } from "./anclaje.js";
 
-const eleccionesPorVerso = new Map<number, Eleccion[]>();
+let eleccionesPorVerso = new Map<number, Eleccion[]>();
+
+/**
+ * §OVR-02: reubica las elecciones ancladas a líneas tras los cambios del
+ * documento. Reemplaza el mapa interno por el resultado de
+ * `reubicarElecciones`.
+ */
+export function aplicarCambios(cambios: readonly CambioLineas[]): void {
+  eleccionesPorVerso = reubicarElecciones(eleccionesPorVerso, cambios);
+}
 
 /** Devuelve las elecciones acumuladas para un verso (copia defensiva). */
 export function eleccionesDe(versoId: number): Eleccion[] {

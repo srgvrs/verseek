@@ -1,6 +1,12 @@
 import { montarEditor, setMetricas, setTonicas } from "./editor";
 import { crearPanel } from "./panel";
-import { alternarAcento, alternarCandidato, eleccionesDe } from "./estado";
+import {
+  alternarAcento,
+  alternarCandidato,
+  aplicarCambios,
+  eleccionesDe,
+} from "./estado";
+import type { CambioLineas } from "./anclaje.js";
 import type { AnalisisVerso, CandidatoAnalizado } from "@verseek/motor";
 import type {
   MensajeEntrada,
@@ -102,7 +108,14 @@ worker.addEventListener("message", (ev: MessageEvent<MensajeSalida>) => {
   refrescarPanel();
 });
 
-view = montarEditor(app, programarAnalisis, refrescarPanel);
+view = montarEditor(
+  app,
+  (cambios: CambioLineas[]) => {
+    aplicarCambios(cambios);
+    programarAnalisis();
+  },
+  refrescarPanel,
+);
 
 programarAnalisis();
 console.log("verseek web — editor montado");

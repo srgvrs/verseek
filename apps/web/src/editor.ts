@@ -5,6 +5,7 @@ import {
   WidgetType,
   type DecorationSet,
 } from "@codemirror/view";
+import type { CambioLineas } from "./anclaje.js";
 
 /**
  * Efecto que reemplaza el mapa de métricas por línea.
@@ -94,14 +95,49 @@ const campoTonicas = StateField.define<DecorationSet>({
   provide: (f) => EditorView.decorations.from(f),
 });
 
+function contarSaltos(texto: string): number {
+  let n = 0;
+  for (let i = 0; i < texto.length; i++) {
+    if (texto.charCodeAt(i) === 10) n++;
+  }
+  return n;
+}
+
+/**
+ * §OVR-02: traduce los cambios de una transacción a `CambioLineas[]`.
+ * `iterChanges` da posiciones del documento inicial; ajustamos `desde`
+ * sumando el desplazamiento acumulado de líneas de los cambios previos.
+ */
+function cambiosDeTransaccion(
+  tr: { startState: { doc: { lineAt: (pos: number) => { number: number } } }; changes: { iterChanges: (f: (fromA: number, toA: number, fromB: number, toB: number, texto: { toString: () => string }) => void) => void } },
+): CambioLineas[] {
+  const out: CambioLineas[] = [];
+  let desplazamiento = 0;
+  tr.changes.iterChanges((fromA, toA, _fromB, _toB, texto) => {
+    const desdeBase = tr.startState.doc.lineAt(fromA).number - 1;
+    const borradas = contarSaltos(
+      (tr.startState as unknown as { doc: { sliceString: (a: number, b: number) => string } }).doc.sliceString(fromA, toA),
+    );
+    const insertadas = contarSaltos(texto.toString());
+    out.push({
+      desde: desdeBase + desplazamiento,
+      borradas,
+      insertadas,
+    });
+    desplazamiento += insertadas - borradas;
+  });
+  return out;
+}
+
 /**
  * Monta un editor CodeMirror 6 a pantalla completa dentro de `contenedor`.
  * `alCambiar` se invoca en cada transacción que modifique el documento
- * (teclas, pegar, deshacer, comandos propios de CodeMirror, etc.).
+ * (teclas, pegar, deshacer, comandos propios de CodeMirror, etc.) con la
+ * lista de cambios de líneas (§OVR-02).
  */
 export function montarEditor(
   contenedor: HTMLElement,
-  alCambiar?: () => void,
+  alCambiar?: (cambios: CambioLineas[]) => void,
   alMoverCursor?: () => void,
 ): EditorView {
   const view = new EditorView({
@@ -112,7 +148,7 @@ export function montarEditor(
       campoMetricas,
       campoTonicas,
       EditorView.updateListener.of((u) => {
-        if (u.docChanged) alCambiar?.();
+        if (u.docChanged) alCambiar?.(cambiosDeTransaccion(u));
         if (u.selectionSet) alMoverCursor?.();
       }),
       EditorView.lineWrapping,
